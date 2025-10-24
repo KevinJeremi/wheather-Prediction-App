@@ -224,7 +224,7 @@ export function ClimaSidebar({
       <div className="h-14 px-4 flex flex-row md:hidden items-center justify-between bg-white/80 dark:bg-gray-900/90 backdrop-blur-xl border-b border-white/20 dark:border-gray-700/20 w-full fixed top-0 left-0 z-50">
         {/* Logo */}
         <div className="flex items-center gap-2.5">
-          <motion.div 
+          <motion.div
             className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#2F80ED] to-[#56CCF2] flex items-center justify-center shadow-lg"
             whileHover={{ scale: 1.05, rotate: 5 }}
             transition={{ type: 'spring', stiffness: 400 }}

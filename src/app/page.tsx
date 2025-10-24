@@ -712,9 +712,8 @@ function ClimaSenseAppContent() {
                   </div>
                   {/* Toggle Switch */}
                   <motion.div
-                    className={`w-10 h-6 rounded-full flex items-center p-0.5 transition-colors ${
-                      isDark ? 'bg-yellow-400' : 'bg-gray-300'
-                    }`}
+                    className={`w-10 h-6 rounded-full flex items-center p-0.5 transition-colors ${isDark ? 'bg-yellow-400' : 'bg-gray-300'
+                      }`}
                   >
                     <motion.div
                       className="w-5 h-5 rounded-full bg-white shadow-md"

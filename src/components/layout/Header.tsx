@@ -20,9 +20,9 @@ export function Header({ isDark, setIsDark, sidebarOpen, setSidebarOpen }: Heade
     >
       {/* Logo */}
       <div className="flex items-center p-2">
-        <img 
-          src="/logo.png" 
-          alt="Weather App" 
+        <img
+          src="/logo.png"
+          alt="Weather App"
           className="h-14 w-auto max-w-[160px] object-contain"
           loading="eager"
         />
