@@ -14,7 +14,7 @@ export function EnhancedGlobeBackground({ isDark }: EnhancedGlobeBackgroundProps
       return {
         width: 800,
         height: 800,
-        onRender: () => {},
+        onRender: () => { },
         devicePixelRatio: 2,
         phi: 0,
         theta: 0.3,
@@ -40,7 +40,7 @@ export function EnhancedGlobeBackground({ isDark }: EnhancedGlobeBackgroundProps
       return {
         width: 800,
         height: 800,
-        onRender: () => {},
+        onRender: () => { },
         devicePixelRatio: 2,
         phi: 0,
         theta: 0.3,
@@ -117,14 +117,14 @@ export function EnhancedGlobeBackground({ isDark }: EnhancedGlobeBackgroundProps
             {/* Globe placeholder - replace with actual Globe component when available */}
             <div className="w-full aspect-square bg-gradient-to-br from-blue-400/20 to-cyan-400/20 dark:from-blue-600/20 dark:to-cyan-600/20 rounded-full" />
           </div>
-          
+
           {/* Gradient overlay to blend with content - pointer-events-none */}
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white/60 dark:to-black/60 pointer-events-none" />
         </div>
       </div>
 
       {/* Subtle grid pattern overlay - pointer-events-none */}
-      <div 
+      <div
         className="absolute inset-0 opacity-[0.02] dark:opacity-[0.03] pointer-events-none"
         style={{
           backgroundImage: `
