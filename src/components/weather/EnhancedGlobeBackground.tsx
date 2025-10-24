@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from 'framer-motion';
-import { Globe } from './ui/globe';
 import { COBEOptions } from 'cobe';
 
 interface EnhancedGlobeBackgroundProps {
@@ -115,10 +114,8 @@ export function EnhancedGlobeBackground({ isDark }: EnhancedGlobeBackgroundProps
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="relative w-full h-full max-w-7xl mx-auto pointer-events-none">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[1200px] md:max-w-[1400px] pointer-events-auto opacity-25 dark:opacity-35 scale-110 md:scale-125">
-            <Globe 
-              className="w-full aspect-square"
-              config={getGlobeConfig()}
-            />
+            {/* Globe placeholder - replace with actual Globe component when available */}
+            <div className="w-full aspect-square bg-gradient-to-br from-blue-400/20 to-cyan-400/20 dark:from-blue-600/20 dark:to-cyan-600/20 rounded-full" />
           </div>
           
           {/* Gradient overlay to blend with content - pointer-events-none */}
