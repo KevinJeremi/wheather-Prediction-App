@@ -8,8 +8,8 @@ import { cn } from "@/lib/utils";
 import { toggleVariants } from "@/components/ui/toggle";
 
 const ToggleGroupContext = React.createContext<{
-  size?: "default" | "sm" | "lg";
-  variant?: "default" | "outline";
+  size?: "default" | "sm" | "lg" | null;
+  variant?: "default" | "outline" | null;
 }>({
   size: "default",
   variant: "default",
@@ -25,7 +25,7 @@ const ToggleGroup = React.forwardRef<
     className={cn("flex items-center justify-center gap-1", className)}
     {...props}
   >
-    <ToggleGroupContext.Provider value={{ variant, size }}>
+    <ToggleGroupContext.Provider value={{ variant: variant || "default", size }}>
       {children}
     </ToggleGroupContext.Provider>
   </ToggleGroupPrimitive.Root>
