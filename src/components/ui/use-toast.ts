@@ -1,5 +1,7 @@
 "use client";
 
+import * as React from "react";
+
 import type {
   ToastActionElement,
   ToastProps,
@@ -155,7 +157,7 @@ function toast({ ...props }: Toast) {
       ...props,
       id,
       open: true,
-      onOpenChange: (open) => {
+      onOpenChange: (open: boolean) => {
         if (!open) dismiss();
       },
     },
