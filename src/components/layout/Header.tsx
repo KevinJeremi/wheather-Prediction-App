@@ -1,7 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Moon, Sun } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface HeaderProps {
   isDark: boolean;
@@ -27,10 +28,37 @@ export function Header({ isDark, setIsDark, sidebarOpen, setSidebarOpen }: Heade
         />
       </div>
 
-      <Menu
-        className="text-gray-800 dark:text-gray-200 cursor-pointer w-6 h-6"
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-      />
+      {/* Right side - Theme Toggle and Menu */}
+      <div className="flex items-center gap-2">
+        {/* Dark Mode Toggle Button */}
+        <motion.button
+          onClick={() => setIsDark(!isDark)}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          title={isDark ? 'Light Mode' : 'Dark Mode'}
+        >
+          {isDark ? (
+            <Sun size={20} className="text-yellow-500" />
+          ) : (
+            <Moon size={20} className="text-gray-600" />
+          )}
+        </motion.button>
+
+        {/* Menu Icon */}
+        <motion.button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+        >
+          {sidebarOpen ? (
+            <X className="text-gray-800 dark:text-gray-200 w-6 h-6" />
+          ) : (
+            <Menu className="text-gray-800 dark:text-gray-200 w-6 h-6" />
+          )}
+        </motion.button>
+      </div>
     </motion.div>
   );
 }

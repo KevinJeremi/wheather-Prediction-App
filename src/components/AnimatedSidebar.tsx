@@ -217,6 +217,185 @@ export function ClimaSidebar({
     );
   }
 
-  // Mobile sidebar handled through header component
-  return null;
+  // Mobile sidebar
+  return (
+    <>
+      {/* Mobile Header */}
+      <div className="h-14 px-4 flex flex-row md:hidden items-center justify-between bg-white/80 dark:bg-gray-900/90 backdrop-blur-xl border-b border-white/20 dark:border-gray-700/20 w-full fixed top-0 left-0 z-50">
+        {/* Logo */}
+        <div className="flex items-center gap-2.5">
+          <motion.div 
+            className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#2F80ED] to-[#56CCF2] flex items-center justify-center shadow-lg"
+            whileHover={{ scale: 1.05, rotate: 5 }}
+            transition={{ type: 'spring', stiffness: 400 }}
+          >
+            <span className="text-lg">☀️</span>
+          </motion.div>
+          <div>
+            <h1 className="text-[#2F80ED] dark:text-[#56CCF2] text-sm font-medium">ClimaSense</h1>
+            <p className="text-[10px] text-gray-500 dark:text-gray-400 -mt-0.5">Weather</p>
+          </div>
+        </div>
+
+        {/* Menu Icon */}
+        <motion.button
+          onClick={() => setOpen(!open)}
+          className="text-gray-800 dark:text-gray-200 cursor-pointer z-20 p-2 rounded-lg hover:bg-white/50 dark:hover:bg-gray-800/50"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          {open ? <X size={24} /> : <Menu size={24} />}
+        </motion.button>
+      </div>
+
+      {/* Mobile Sidebar Overlay */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ x: "-100%", opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: "-100%", opacity: 0 }}
+            transition={{
+              duration: 0.3,
+              ease: "easeInOut",
+            }}
+            className="fixed h-full w-full inset-0 bg-white dark:bg-gray-900 pt-20 pb-6 z-[100] flex flex-col justify-between overflow-y-auto"
+          >
+            {/* Close Button */}
+            <motion.button
+              className="absolute right-4 top-4 text-gray-800 dark:text-gray-200 cursor-pointer z-50 p-2 rounded-lg hover:bg-white/50 dark:hover:bg-gray-800/50"
+              onClick={() => setOpen(!open)}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <X size={24} />
+            </motion.button>
+
+            {/* Navigation Links */}
+            <nav className="flex-1 px-4 space-y-2">
+              {navigationLinks.map((link) => (
+                <div key={link.value}>
+                  <motion.button
+                    onClick={() => {
+                      if (link.submenu) {
+                        setHistoryExpanded(!historyExpanded);
+                      } else {
+                        setActiveView(link.value);
+                        setOpen(false);
+                        setHistoryExpanded(false);
+                      }
+                    }}
+                    className={cn(
+                      "flex items-center justify-between py-3 px-4 rounded-xl transition-all w-full",
+                      (activeView === link.value ||
+                        (link.submenu && ['weather-history', 'weather-prediction'].includes(activeView)))
+                        ? "bg-gradient-to-r from-[#2F80ED] to-[#56CCF2] text-white shadow-lg"
+                        : "text-gray-600 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-800/50"
+                    )}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <div className="flex items-center gap-3 flex-1">
+                      <div className="flex-shrink-0">
+                        {link.icon}
+                      </div>
+                      <span className="text-sm font-medium text-left">
+                        {link.label}
+                      </span>
+                    </div>
+                    {link.submenu && (
+                      <motion.div
+                        animate={{ rotate: historyExpanded ? 180 : 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <ChevronDown size={16} />
+                      </motion.div>
+                    )}
+                  </motion.button>
+
+                  {/* Submenu */}
+                  <AnimatePresence>
+                    {link.submenu && historyExpanded && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="overflow-hidden mt-1"
+                      >
+                        <div className="space-y-1 ml-4">
+                          {link.submenu.map((subitem) => (
+                            <motion.button
+                              key={subitem.value}
+                              onClick={() => {
+                                setActiveView(subitem.value);
+                                setOpen(false);
+                                setHistoryExpanded(false);
+                              }}
+                              className={cn(
+                                "flex items-center gap-3 py-2 px-4 rounded-lg transition-all w-full text-sm",
+                                activeView === subitem.value
+                                  ? "bg-white/30 text-white shadow-md"
+                                  : "text-gray-500 dark:text-gray-400 hover:bg-white/20 dark:hover:bg-gray-700/30"
+                              )}
+                              whileTap={{ scale: 0.98 }}
+                            >
+                              <div className="w-1.5 h-1.5 rounded-full bg-current opacity-60" />
+                              <span className="font-medium">
+                                {subitem.label}
+                              </span>
+                            </motion.button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ))}
+            </nav>
+
+            {/* Divider */}
+            <div className="mx-4 h-px bg-gray-200 dark:bg-gray-700 my-4" />
+
+            {/* Dark Mode Toggle */}
+            <motion.div className="px-4">
+              <motion.button
+                onClick={() => setIsDark(!isDark)}
+                className={cn(
+                  "flex items-center justify-between py-3 px-4 rounded-xl transition-all w-full",
+                  "text-gray-600 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
+                )}
+                whileTap={{ scale: 0.98 }}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex-shrink-0">
+                    {isDark ? (
+                      <Sun size={20} className="text-yellow-500" />
+                    ) : (
+                      <Moon size={20} />
+                    )}
+                  </div>
+                  <span className="text-sm font-medium text-left">
+                    {isDark ? 'Light Mode' : 'Dark Mode'}
+                  </span>
+                </div>
+                {/* Toggle Switch */}
+                <motion.div
+                  className={cn(
+                    "w-10 h-6 rounded-full flex items-center p-0.5 transition-colors",
+                    isDark ? "bg-yellow-400" : "bg-gray-300"
+                  )}
+                >
+                  <motion.div
+                    className="w-5 h-5 rounded-full bg-white shadow-md"
+                    animate={{ x: isDark ? 16 : 0 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                  />
+                </motion.div>
+              </motion.button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
 }

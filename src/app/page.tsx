@@ -22,7 +22,7 @@ import { useWeather } from '@/hooks/useWeather';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { WeatherProvider } from '@/context/WeatherContext';
 import BoxLoader from '@/components/ui/box-loader';
-import { MapPin, RefreshCw, Plus, Trash2, CloudRain, Sun, Wind, AlertCircle, AlertTriangle, ChevronDown } from 'lucide-react';
+import { MapPin, RefreshCw, Plus, Trash2, CloudRain, Sun, Wind, AlertCircle, AlertTriangle, ChevronDown, Moon } from 'lucide-react';
 import type { LocationCoordinates } from '@/types/weather.types';
 import { useWeatherInsights } from '@/hooks/useWeatherInsights';
 
@@ -687,6 +687,42 @@ function ClimaSenseAppContent() {
                     </div>
                   ))}
                 </nav>
+
+                {/* Divider */}
+                <div className="my-4 h-px bg-gray-200 dark:bg-gray-700" />
+
+                {/* Dark Mode Toggle */}
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setIsDark(!isDark)}
+                  className="w-full flex items-center justify-between px-3 py-3 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all border border-gray-300 dark:border-gray-600"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0">
+                      {isDark ? (
+                        <Sun size={20} className="text-yellow-500" />
+                      ) : (
+                        <Moon size={20} className="text-gray-600" />
+                      )}
+                    </div>
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                      {isDark ? 'Light Mode' : 'Dark Mode'}
+                    </span>
+                  </div>
+                  {/* Toggle Switch */}
+                  <motion.div
+                    className={`w-10 h-6 rounded-full flex items-center p-0.5 transition-colors ${
+                      isDark ? 'bg-yellow-400' : 'bg-gray-300'
+                    }`}
+                  >
+                    <motion.div
+                      className="w-5 h-5 rounded-full bg-white shadow-md"
+                      animate={{ x: isDark ? 16 : 0 }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    />
+                  </motion.div>
+                </motion.button>
               </motion.div>
             </>
           )}
