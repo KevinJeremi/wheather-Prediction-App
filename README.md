@@ -176,7 +176,9 @@ Tabel berikut menunjukkan API mana yang digunakan di bagian mana di aplikasi web
 | 1 | **Open-Meteo API** | Hero Section | Suhu saat ini, Status cuaca, Icon | ❌ |
 | 2 | **Open-Meteo API** | Weather Stats Cards | Feels Like, Humidity, Wind Speed, Rain | ❌ |
 | 3 | **Open-Meteo API** | Today Summary | High/Low Temperature | ❌ |
-| 4 | **Open-Meteo API** | Environmental Insights | UV Index, Sunrise, Sunset | ❌ |
+| 4a | **Open-Meteo API** | Environmental Insights | UV Index, Sunrise, Sunset | ❌ |
+| 4b | **Open-Meteo Air Quality API** | Environmental Insights | Air Quality Index, PM2.5, PM10, CO, Ozone | ❌ |
+| 4c | **OpenWeatherMap API** | Environmental Insights | Visibility (km) | ✅ |
 | 5 | **Open-Meteo API** | Prediction Chart | Forecast 7/14/16 hari | ❌ |
 | 6 | **Groq API** | AI Reasoning Chat | Chat responses & analysis | ✅ |
 | 7 | **Groq API** | Smart Alerts | AI-generated weather alerts | ✅ |
@@ -189,6 +191,25 @@ Tabel berikut menunjukkan API mana yang digunakan di bagian mana di aplikasi web
 - ✅ = Memerlukan API Key
 - ❌ = Tidak memerlukan API Key  
 - 📍 = User Permission Required
+
+### 📍 Environmental Insights - Data & Source
+
+Komponen **Environmental Insights** menampilkan data lingkungan yang berasal dari **3 API berbeda**:
+
+| **Data** | **Source API** | **Deskripsi** |
+|:---|:---|:---|
+| **Air Quality Index (AQI)** | **Open-Meteo Air Quality API** | AQI dihitung dari nilai PM2.5, PM10, CO, O₃ (nilai 0-500) |
+| **Air Quality Level** | **Open-Meteo Air Quality API** | Kategori: Good, Moderate, Unhealthy for Sensitive, Unhealthy, Very Unhealthy, Hazardous |
+| **PM2.5** | **Open-Meteo Air Quality API** | Particulate Matter 2.5 µm (satuan: µg/m³) dari data kualitas udara real-time |
+| **Visibility (km)** | **OpenWeatherMap API** | Visibilitas horizontal dalam kilometer dari current weather data |
+| **UV Index** | **Open-Meteo API** | Indeks radiasi UV maksimum harian (0-11+) dari model meteorologi JMA |
+| **Sunrise Time** | **Open-Meteo API** | Waktu terbit matahari (format ISO 8601) |
+| **Sunset Time** | **Open-Meteo API** | Waktu terbenam matahari (format ISO 8601) |
+
+**Penjelasan API:**
+- 🌤️ **Open-Meteo Air Quality API** (`https://air-quality-api.open-meteo.com`) - Menyediakan data kualitas udara (PM2.5, PM10, CO, Ozone)
+- 🌍 **OpenWeatherMap API** (`https://api.openweathermap.org`) - Menyediakan data visibilitas dari current weather
+- 📊 **Open-Meteo Forecast API** (`https://api.open-meteo.com`) - Menyediakan UV Index, Sunrise, Sunset dari JMA model
 
 ---
 
