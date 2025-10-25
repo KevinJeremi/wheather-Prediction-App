@@ -51,13 +51,13 @@ function ClimaSenseAppContent() {
 
   // Debug geolocation status
   useEffect(() => {
-    console.log('🌍 Geolocation Debug:', {
-      currentLocation,
+    console.log('🌍 Geolocation Status:', {
+      hasLocation: !!currentLocation,
       isGeoLoading,
-      geoError,
-      activeLocation
+      hasError: !!geoError,
+      showLocationOptions
     });
-  }, [currentLocation, isGeoLoading, geoError, activeLocation]);
+  }, [currentLocation, isGeoLoading, geoError, showLocationOptions]);
 
   useEffect(() => {
     const saved = localStorage.getItem('weatherLocations');
@@ -93,27 +93,30 @@ function ClimaSenseAppContent() {
 
   // Search for location by name
   const searchLocationByName = async (locationName: string) => {
-    if (!locationName.trim()) return;
+    if (!locationName.trim()) {
+      alert('Silakan masukkan nama kota');
+      return;
+    }
 
     setIsSearchingLocation(true);
     try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(locationName)}&format=json&limit=5`,
-        {
-          headers: {
-            'User-Agent': 'ClimaSenseWeatherApp/1.0'
-          }
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(locationName)}&format=json&limit=5`;
+
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'ClimaSenseWeatherApp/1.0'
         }
-      );
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to search location');
+        throw new Error(`API error: ${response.status}`);
       }
 
       const results = await response.json();
 
-      if (results.length > 0) {
+      if (results && results.length > 0) {
         const firstResult = results[0];
+
         const newLocation: LocationCoordinates = {
           latitude: parseFloat(firstResult.lat),
           longitude: parseFloat(firstResult.lon),
@@ -121,7 +124,7 @@ function ClimaSenseAppContent() {
         };
 
         const saved = localStorage.getItem('weatherLocations');
-        let locations = [];
+        let locations: LocationCoordinates[] = [];
         if (saved) {
           try {
             locations = JSON.parse(saved);
@@ -131,7 +134,7 @@ function ClimaSenseAppContent() {
         }
 
         const exists = locations.some(
-          (loc: any) => loc.latitude === newLocation.latitude && loc.longitude === newLocation.longitude
+          (loc) => loc.latitude === newLocation.latitude && loc.longitude === newLocation.longitude
         );
 
         if (!exists) {
@@ -147,8 +150,8 @@ function ClimaSenseAppContent() {
         alert('Lokasi tidak ditemukan. Coba dengan nama kota yang berbeda.');
       }
     } catch (error) {
-      console.error('Failed to search location:', error);
-      alert('Gagal mencari lokasi. Silakan coba lagi.');
+      console.error('Error searching location:', error);
+      alert(`Gagal mencari lokasi: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsSearchingLocation(false);
     }
@@ -304,90 +307,7 @@ function ClimaSenseAppContent() {
     );
   }
 
-  if (!activeLocation && geoError) {
-    return (
-      <div className={isDark ? 'dark' : ''}>
-        <Aurora
-          colorStops={getAuroraColors()}
-          blend={0.6}
-          amplitude={1.2}
-          speed={0.8}
-        />
-        <div className="flex items-center justify-center min-h-screen px-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-3xl p-8 max-w-md w-full shadow-2xl border border-white/50 dark:border-gray-700/50"
-          >
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-                <MapPin className="w-8 h-8 text-red-600" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                Lokasi Tidak Terdeteksi
-              </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                {geoError}
-              </p>
-              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-3 mb-4">
-                <p className="text-xs text-blue-800 dark:text-blue-300">
-                  💡 Tip: Periksa pengaturan privasi browser Anda atau cari lokasi secara manual di bawah.
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={retryGeolocation}
-                disabled={isGeoLoading}
-                className="w-full p-3 rounded-xl bg-gradient-to-r from-[#2F80ED] to-[#56CCF2] text-white font-medium hover:shadow-lg transition-shadow disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isGeoLoading ? (
-                  <>
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                      className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
-                    />
-                    Mencoba Deteksi...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="w-4 h-4" />
-                    Coba Lagi
-                  </>
-                )}
-              </motion.button>
-
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400">
-                    atau
-                  </span>
-                </div>
-              </div>
-
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setShowLocationOptions(true)}
-                className="w-full p-3 rounded-xl bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white font-medium hover:shadow-lg transition-shadow flex items-center justify-center gap-2"
-              >
-                <MapPin className="w-4 h-4" />
-                Cari Lokasi Manual
-              </motion.button>
-            </div>
-          </motion.div>
-        </div>
-      </div>
-    );
-  }
-
+  // Cek showLocationOptions DULU sebelum error screen
   if (showLocationOptions) {
     return (
       <div className={isDark ? 'dark' : ''}>
@@ -503,6 +423,90 @@ function ClimaSenseAppContent() {
                 className="w-full p-3 rounded-xl bg-gray-300 dark:bg-gray-600 text-gray-900 dark:text-white font-medium hover:shadow-lg transition-shadow"
               >
                 Kembali
+              </motion.button>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!activeLocation && geoError) {
+    return (
+      <div className={isDark ? 'dark' : ''}>
+        <Aurora
+          colorStops={getAuroraColors()}
+          blend={0.6}
+          amplitude={1.2}
+          speed={0.8}
+        />
+        <div className="flex items-center justify-center min-h-screen px-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-3xl p-8 max-w-md w-full shadow-2xl border border-white/50 dark:border-gray-700/50"
+          >
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                <MapPin className="w-8 h-8 text-red-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                Lokasi Tidak Terdeteksi
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                {geoError}
+              </p>
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-3 mb-4">
+                <p className="text-xs text-blue-800 dark:text-blue-300">
+                  💡 Tip: Periksa pengaturan privasi browser Anda atau cari lokasi secara manual di bawah.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={retryGeolocation}
+                disabled={isGeoLoading}
+                className="w-full p-3 rounded-xl bg-gradient-to-r from-[#2F80ED] to-[#56CCF2] text-white font-medium hover:shadow-lg transition-shadow disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isGeoLoading ? (
+                  <>
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                      className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
+                    />
+                    Mencoba Deteksi...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="w-4 h-4" />
+                    Coba Lagi
+                  </>
+                )}
+              </motion.button>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400">
+                    atau
+                  </span>
+                </div>
+              </div>
+
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setShowLocationOptions(true)}
+                className="w-full p-3 rounded-xl bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white font-medium hover:shadow-lg transition-shadow flex items-center justify-center gap-2"
+              >
+                <MapPin className="w-4 h-4" />
+                Cari Lokasi Manual
               </motion.button>
             </div>
           </motion.div>
