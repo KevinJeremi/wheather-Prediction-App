@@ -10,7 +10,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { chat } from '@/services/openrouterService'
+import { chat } from '@/services/groqService'
 import type { ConversationHistory } from '@/types/ai.types'
 
 // Enable runtime

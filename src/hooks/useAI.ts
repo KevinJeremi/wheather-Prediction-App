@@ -6,7 +6,7 @@
 
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import {
     getWeatherAnalysis,
     getDailySummary,
@@ -14,12 +14,24 @@ import {
     generateWeatherRecommendations,
     analyzeWeatherTrend,
 } from '@/services/groqService'
+import { requestDeduplicator } from '@/lib/requestDeduplicator'
 import type {
     AIResponse,
     AIMessage,
     ConversationHistory,
     WeatherAnalysisContext,
 } from '@/types/ai.types'
+
+// Simple hash function untuk cache key
+function hashString(str: string): string {
+    let hash = 0
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i)
+        hash = ((hash << 5) - hash) + char
+        hash = hash & hash
+    }
+    return Math.abs(hash).toString(36)
+}
 
 // ============================================================
 // Hook Type Definitions
@@ -59,7 +71,7 @@ export function useAI() {
 
     // Conversation history - dengan memory limit
     const conversationHistoryRef = useRef<ConversationHistory>([])
-    const MAX_CONVERSATION_HISTORY = 20  // Store up to 20 messages (10 exchanges)
+    const MAX_CONVERSATION_HISTORY = 10  // ✅ Balanced: Keep 5 exchanges for better context, ~2KB memory
 
     // ========================================================
     // Helper Functions
@@ -163,7 +175,13 @@ export function useAI() {
             try {
                 addToHistory('user', message)
 
-                const result = await chat(message, conversationHistoryRef.current)
+                // ✅ Use deduplication with debouncing to prevent duplicate requests
+                const cacheKey = `chat_${hashString(message)}_${conversationHistoryRef.current.length}`
+                const result = await requestDeduplicator.executeWithDedup(
+                    cacheKey,
+                    () => chat(message, conversationHistoryRef.current),
+                    { debounce: true } // 800ms debounce
+                )
 
                 if (!result.success || !result.content) {
                     throw new Error(result.error?.message || 'Chat gagal')

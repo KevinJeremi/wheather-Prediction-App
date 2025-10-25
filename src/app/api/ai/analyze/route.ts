@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getWeatherAnalysis, generateWeatherRecommendations } from '@/services/openrouterService'
+import { getWeatherAnalysis, generateWeatherRecommendations } from '@/services/groqService'
 
 export const runtime = 'nodejs'
 

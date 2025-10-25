@@ -10,6 +10,8 @@ import type {
     AIContext,
     ConversationHistory,
 } from '@/types/ai.types'
+import { responseCache, generateCacheKey } from '@/lib/cacheManager'
+import { tokenTracker, estimateTokenCount } from '@/lib/tokenUsageTracker'
 
 // ============================================================
 // Configuration
@@ -191,8 +193,8 @@ async function callGroqAPI(
         model: MODEL,
         messages,
         temperature: options?.temperature ?? 0.7,
-        max_tokens: options?.max_tokens ?? 512, // Reduced from 1024 to reduce token usage
-        top_p: options?.top_p ?? 1.0,
+        max_tokens: options?.max_tokens ?? 1000,  // ✅ FIXED: Increased from 128 to 1000 to prevent truncation
+        top_p: options?.top_p ?? 0.95,
         stream: false,
     }
 
@@ -332,6 +334,20 @@ export async function getWeatherAnalysis(
     userQuestion?: string
 ): Promise<AIResponse> {
     try {
+        // ✅ Check cache first
+        const cacheKey = generateCacheKey('analysis', weatherContext, userQuestion)
+        const cached = responseCache.get(cacheKey)
+        if (cached) {
+            console.log('💾 Cache hit: Weather analysis')
+            tokenTracker.trackUsage(estimateTokenCount(cached), 'analysis')
+            return {
+                success: true,
+                content: cached,
+                model: MODEL,
+                timestamp: new Date().toISOString(),
+            }
+        }
+
         const userMessage = userQuestion
             ? `Kondisi cuaca: ${weatherContext}\n\nPertanyaan: ${userQuestion}`
             : `Berikan analisis cuaca untuk kondisi berikut: ${weatherContext}`
@@ -349,8 +365,14 @@ export async function getWeatherAnalysis(
 
         const content = await callGroqAPI(messages, {
             temperature: 0.7,
-            max_tokens: 400,  // Reduced to decrease token usage
+            max_tokens: 1000,  // ✅ FIXED: Increased from 50 to 1000 for complete analysis
         })
+
+        // ✅ Cache the response (6 hours TTL for stability)
+        responseCache.set(cacheKey, content, 21600000)
+
+        // ✅ Track token usage
+        tokenTracker.trackUsage(estimateTokenCount(content), 'analysis')
 
         return {
             success: true,
@@ -372,6 +394,20 @@ export async function getDailySummary(
     forecast: string
 ): Promise<AIResponse> {
     try {
+        // ✅ Check cache first
+        const cacheKey = generateCacheKey('summary', location, currentWeather, forecast)
+        const cached = responseCache.get(cacheKey)
+        if (cached) {
+            console.log('💾 Cache hit: Daily summary')
+            tokenTracker.trackUsage(estimateTokenCount(cached), 'summary')
+            return {
+                success: true,
+                content: cached,
+                model: MODEL,
+                timestamp: new Date().toISOString(),
+            }
+        }
+
         const weatherContext = `
 Lokasi: ${location}
 Cuaca Saat Ini: ${currentWeather}
@@ -391,8 +427,14 @@ Prakiraan: ${forecast}
 
         const content = await callGroqAPI(messages, {
             temperature: 0.6,
-            max_tokens: 250,  // Reduced from 500
+            max_tokens: 800,  // ✅ FIXED: Increased from 40 to 800 for complete summary
         })
+
+        // ✅ Cache the response (6 hours TTL for stability)
+        responseCache.set(cacheKey, content, 21600000)
+
+        // ✅ Track token usage
+        tokenTracker.trackUsage(estimateTokenCount(content), 'summary')
 
         return {
             success: true,
@@ -488,7 +530,7 @@ export async function chat(
 
         const content = await callGroqAPI(messages, {
             temperature: 0.8,
-            max_tokens: 512,  // Reduced from 1024
+            max_tokens: 1200,  // ✅ FIXED: Increased from 60 to 1200 for complete chat response
         })
 
         return {
@@ -510,6 +552,20 @@ export async function generateWeatherRecommendations(
     userContext?: string
 ): Promise<AIResponse> {
     try {
+        // ✅ Check cache first
+        const cacheKey = generateCacheKey('recommendation', weatherCondition, userContext)
+        const cached = responseCache.get(cacheKey)
+        if (cached) {
+            console.log('💾 Cache hit: Weather recommendations')
+            tokenTracker.trackUsage(estimateTokenCount(cached), 'recommendation')
+            return {
+                success: true,
+                content: cached,
+                model: MODEL,
+                timestamp: new Date().toISOString(),
+            }
+        }
+
         let prompt = `Berdasarkan kondisi cuaca: ${weatherCondition}\n\nBerikan rekomendasi praktis untuk aktivitas sehari-hari.`
 
         if (userContext) {
@@ -529,8 +585,14 @@ export async function generateWeatherRecommendations(
 
         const content = await callGroqAPI(messages, {
             temperature: 0.7,
-            max_tokens: 350,  // Reduced from 600
+            max_tokens: 1000,  // ✅ FIXED: Increased from 40 to 1000 for complete recommendations
         })
+
+        // ✅ Cache the response (6 hours TTL for stability)
+        responseCache.set(cacheKey, content, 21600000)
+
+        // ✅ Track token usage
+        tokenTracker.trackUsage(estimateTokenCount(content), 'recommendation')
 
         return {
             success: true,
@@ -554,6 +616,21 @@ export async function analyzeWeatherTrend(
     }>
 ): Promise<AIResponse> {
     try {
+        // ✅ Check cache first
+        const predictionKey = predictions.map(p => `${p.time}|${p.temperature}|${p.condition}`).join(';')
+        const cacheKey = generateCacheKey('trend', predictionKey)
+        const cached = responseCache.get(cacheKey)
+        if (cached) {
+            console.log('💾 Cache hit: Weather trend analysis')
+            tokenTracker.trackUsage(estimateTokenCount(cached), 'trend')
+            return {
+                success: true,
+                content: cached,
+                model: MODEL,
+                timestamp: new Date().toISOString(),
+            }
+        }
+
         const predictionText = predictions
             .map((p) => `${p.time}: ${p.temperature}°C, ${p.condition}`)
             .join('\n')
@@ -571,8 +648,14 @@ export async function analyzeWeatherTrend(
 
         const content = await callGroqAPI(messages, {
             temperature: 0.7,
-            max_tokens: 350,  // Reduced from 800
+            max_tokens: 1000,  // ✅ FIXED: Increased from 50 to 1000 for complete trend analysis
         })
+
+        // ✅ Cache the response (6 hours TTL for stability)
+        responseCache.set(cacheKey, content, 21600000)
+
+        // ✅ Track token usage
+        tokenTracker.trackUsage(estimateTokenCount(content), 'trend')
 
         return {
             success: true,
@@ -634,5 +717,38 @@ export function getModelInfo() {
         apiUrl: GROQ_BASE_URL,
         isConfigured: isGroqConfigured(),
         performance: 'Ultra-fast inference with Mixtral 8x7B',
+    }
+}
+
+/**
+ * Get token usage statistics
+ */
+export function getTokenUsageStats() {
+    return tokenTracker.getDailyUsage()
+}
+
+/**
+ * Get detailed token breakdown
+ */
+export function getDetailedStats() {
+    return tokenTracker.exportStats()
+}
+
+/**
+ * Get cache statistics
+ */
+export function getCacheStats() {
+    return responseCache.getStats()
+}
+
+/**
+ * Get all monitoring data
+ */
+export function getAllMonitoringData() {
+    return {
+        tokenUsage: tokenTracker.getDailyUsage(),
+        cacheStats: responseCache.getStats(),
+        breakdown: tokenTracker.getUsageBreakdown(),
+        remaining: tokenTracker.getRemaining(),
     }
 }

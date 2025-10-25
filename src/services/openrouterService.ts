@@ -275,7 +275,7 @@ export async function getWeatherAnalysis(
 
         const content = await callOpenRouterAPI(messages, {
             temperature: 0.7,
-            max_tokens: 800,
+            max_tokens: 1500,  // ✅ Increased from 800 to 1500 to prevent truncation
         })
 
         return {
@@ -365,7 +365,7 @@ export async function chat(
 
         const content = await callOpenRouterAPI(messages, {
             temperature: 0.8,
-            max_tokens: 1024,
+            max_tokens: 1500,  // ✅ Increased from 1024 to 1500 for longer responses
         })
 
         return {
