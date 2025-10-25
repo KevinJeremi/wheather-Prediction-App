@@ -167,6 +167,31 @@ User Input (Location)
 
 ---
 
+## 📊 API Usage Overview
+
+Tabel berikut menunjukkan API mana yang digunakan di bagian mana di aplikasi web:
+
+| **No** | **API / Data Source** | **Bagian Web** | **Data yang Ditampilkan** | **Auth** |
+|:---:|:---|:---|:---|:---:|
+| 1 | **Open-Meteo API** | Hero Section | Suhu saat ini, Status cuaca, Icon | ❌ |
+| 2 | **Open-Meteo API** | Weather Stats Cards | Feels Like, Humidity, Wind Speed, Rain | ❌ |
+| 3 | **Open-Meteo API** | Today Summary | High/Low Temperature | ❌ |
+| 4 | **Open-Meteo API** | Environmental Insights | UV Index, Sunrise, Sunset | ❌ |
+| 5 | **Open-Meteo API** | Prediction Chart | Forecast 7/14/16 hari | ❌ |
+| 6 | **Groq API** | AI Reasoning Chat | Chat responses & analysis | ✅ |
+| 7 | **Groq API** | Smart Alerts | AI-generated weather alerts | ✅ |
+| 8 | **Nominatim API** | Location Search | Nama lokasi, koordinat | ❌ |
+| 9 | **Browser Geolocation** | Location Detection | Latitude, Longitude | 📍 |
+| 10 | **OpenRouter API** | AI (Fallback) | Alternative LLM responses | ✅ |
+| 11 | **Open-Meteo API** | Weather History | Historical data 7/14/16 hari | ❌ |
+
+**Keterangan:**
+- ✅ = Memerlukan API Key
+- ❌ = Tidak memerlukan API Key  
+- 📍 = User Permission Required
+
+---
+
 ## ⚡ Features
 
 ### 🏠 Home Dashboard
