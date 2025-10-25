@@ -20,16 +20,23 @@
 
 1. [🎯 Overview](#-overview)
 2. [⚡ Features](#-features)
-3. [📊 API Usage Overview](#-api-usage-overview)
-4. [🛠️ Tech Stack](#-tech-stack)
-5. [🏗️ System Architecture](#-system-architecture)
-6. [📁 Project Structure](#-project-structure)
-7. [📡 API Documentation](#-api-documentation)
-8. [🚀 Installation & Setup](#-installation--setup)
-9. [🔑 Environment Variables](#-environment-variables)
+3. [🛠️ Tech Stack](#-tech-stack)
+4. [🏗️ System Architecture](#-system-architecture)
+5. [📁 Project Structure](#-project-structure)
+6. [🔄 Component Hierarchy](#-component-hierarchy)
+7. [📡 Data Flow](#-data-flow)
+8. [📚 API Documentation](#-api-documentation)
+9. [🚀 Installation & Setup](#-installation--setup)
+10. [🔑 Environment Variables](#-environment-variables)
+11. [📖 Usage Guide](#-usage-guide)
+12. [🛠️ Development](#-development)
+13. [🚀 Deployment](#-deployment)
+14. [📚 API References](#-api-references)
+15. [🎨 Design System](#-design-system)
+16. [🤝 Contributing](#-contributing)
+17. [📝 License](#-license)
 
 ---
-
 Link Demo : https://wheather-prediction-app.vercel.app/
 
 ## 🎯 Overview
@@ -45,332 +52,551 @@ Link Demo : https://wheather-prediction-app.vercel.app/
 - ✅ **Responsive Design**: Full responsive dari mobile hingga desktop
 - ✅ **Interactive UI**: Animasi smooth dengan Framer Motion & glassmorphism effects
 
+### 🌐 Weather Data Integration: JMA + Open-Meteo
+
+ClimaSense AI menggunakan **kombinasi powerful dari dua model meteorologi** untuk memberikan prediksi cuaca yang paling akurat:
+
+#### **Open-Meteo API with JMA Global Forecast**
+
+Open-Meteo menyediakan akses ke **Japan Meteorological Agency (JMA) Global Forecast Model** - salah satu model prediksi cuaca paling canggih di dunia.
+
+**Keunggulan JMA Model:**
+- 🎯 **Resolusi Tinggi**: Grid spacing 0.25° × 0.25° (±25 km di ekuator)
+- 📊 **Prediksi Jangka Panjang**: Forecast hingga 16 hari dengan akurasi tinggi
+- 🌍 **Cakupan Global**: Mencakup seluruh dunia dengan data komprehensif
+- ⚡ **Update Berkala**: Data diupdate setiap 6 jam (00:00, 06:00, 12:00, 18:00 UTC)
+- 🔬 **Model Fisika Canggih**: Menggunakan persamaan Navier-Stokes dan thermodynamika
+- 📡 **Assimilasi Data Real-time**: Mengintegrasikan observasi satelit, radar, dan stasiun ground
+
+**Parameter Data dari JMA Model:**
+
+```
+Hourly Data (per jam untuk 16 hari):
+├── Temperature 2m (°C)           - Suhu pada ketinggian 2 meter
+├── Relative Humidity 2m (%)      - Kelembaban relatif
+├── Pressure MSL (hPa)            - Tekanan di permukaan laut
+├── Precipitation (mm)             - Curah hujan
+├── Cloud Cover (%)               - Persentase tutupan awan
+├── Wind Speed 10m (km/h)         - Kecepatan angin pada 10 meter
+├── Weather Code (WMO)            - Kode cuaca standar WMO
+├── Shortwave Radiation (W/m²)    - Radiasi matahari
+└── Evapotranspiration (mm)       - Penguapan air dari tanah
+
+Daily Data (per hari):
+├── Temperature 2m Max/Min (°C)   - Suhu maksimum dan minimum harian
+├── Precipitation Sum (mm)         - Total curah hujan harian
+├── Weather Code (WMO)            - Kondisi cuaca dominan
+├── Wind Speed Max (km/h)         - Kecepatan angin maksimum
+├── UV Index Max                  - Indeks radiasi UV maksimum
+├── Sunrise & Sunset (ISO 8601)   - Waktu terbit dan terbenam matahari
+└── Wind Gusts Max (km/h)         - Hembusan angin maksimum
+```
+
+#### **Data Processing Pipeline**
+
+```
+JMA Forecast Data (Open-Meteo)
+        │
+        ├─► Hourly Processing
+        │   ├─ Parse raw meteorological data
+        │   ├─ Validate against QC standards
+        │   └─ Convert units (°C, km/h, mm)
+        │
+        ├─► Daily Aggregation
+        │   ├─ Calculate daily max/min
+        │   ├─ Sum precipitation
+        │   └─ Extract extremes
+        │
+        ├─► Spatial Validation
+        │   ├─ Check data consistency
+        │   ├─ Fill missing values (interpolation)
+        │   └─ Verify coordinate boundaries
+        │
+        └─► AI Context Generation
+            ├─ Temperature trends
+            ├─ Precipitation probability
+            ├─ Severe weather patterns
+            └─ Human-readable summaries
+```
+
+#### **Model Accuracy & Reliability**
+
+| Forecast Range | JMA Model Accuracy | Confidence Level |
+|---|---|---|
+| **0-3 days** | 95%+ | Very High ✅ |
+| **4-7 days** | 85-90% | High ✅ |
+| **8-12 days** | 75-80% | Moderate ⚠️ |
+| **13-16 days** | 65-75% | Lower ⚠️ |
+
+**Catatan**: Akurasi bervariasi berdasarkan region, musim, dan kondisi atmosfer lokal.
+
+#### **Kombinasi Strategi Kami**
+
+```
+User Input (Location)
+    │
+    ├─► Fetch from JMA via Open-Meteo
+    │   ├─ Get latest model run
+    │   ├─ Extract hourly + daily data
+    │   └─ Cache for 10 minutes
+    │
+    ├─► Process & Validate
+    │   ├─ Type conversion
+    │   ├─ Range checking
+    │   └─ Handle missing data
+    │
+    ├─► Generate AI Context
+    │   ├─ Weather analysis
+    │   ├─ Alert generation
+    │   └─ Summary creation
+    │
+    └─► Display to User
+        ├─ Real-time dashboard
+        ├─ Interactive charts
+        ├─ AI-powered insights
+        └─ Actionable alerts
+```
+
+**Keuntungan Pendekatan Ini:**
+- 📈 **Akurasi Maksimal**: JMA adalah salah satu model terbaik dunia
+- 🔄 **Data Konsisten**: Single source of truth untuk semua prediksi
+- ⚡ **Response Cepat**: Data di-cache untuk performa optimal
+- 🎯 **Granularitas Tinggi**: Data per jam untuk detail maksimal
+- 🌍 **Jangkauan Global**: Bekerja di mana saja di dunia
+- 💰 **Cost Effective**: Open-Meteo gratis untuk penggunaan non-komersial
+
 ---
 
 ## ⚡ Features
 
-### Core Weather Features
-- 🌡️ Real-time temperature display with smooth count-up animation
-- 📊 16-day weather forecast with interactive charts
-- 💧 Humidity, wind speed, and precipitation tracking
-- ☀️ UV Index, sunrise/sunset times
-- 📍 Multi-location support with search functionality
-- ⚠️ Smart weather alerts and warnings
+### 🏠 Home Dashboard
+- **Location Carousel**: Navigasi cepat antar lokasi tersimpan
+- **Smart Alerts**: Notifikasi cuaca berbasis AI
+- **Hero Section**: Tampilan utama suhu dan kondisi cuaca
+- **Today's Summary**: Ringkasan kondisi hari ini
+- **Weather Stats Cards**: Kelembaban, kecepatan angin, probabilitas hujan
+- **Environmental Insights**: Kualitas udara, indeks UV, sunrise/sunset
+- **Prediction Chart**: Visualisasi prediksi temperatur dengan 3 rentang waktu
+- **AI Reasoning**: Chat interface dengan AI untuk analisis mendalam
 
-### AI Features
-- 🤖 AI-powered weather analysis and recommendations
-- 💬 Interactive chat with AI weather assistant
-- 🧠 Context-aware weather insights
-- 📈 Predictive analytics powered by LLM
+### 📊 History View
+- **Weather History**: Riwayat data cuaca historis
+- **Forecast**: Prediksi cuaca detil hingga 16 hari
 
-### UI/UX Features
-- 🎨 Beautiful glassmorphism design
-- 🌓 Automatic dark/light mode switching
-- 📱 Fully responsive (mobile, tablet, desktop)
-- ✨ Smooth animations with Framer Motion
-- 🗺️ Interactive 3D globe visualization
-- 🎯 Intuitive navigation with sidebar
+### 🔔 Alerts System
+- **Real-time Alerts**: Notifikasi otomatis untuk kondisi ekstrem
+- **Severity Levels**: High, Moderate, Low
+- **AI-Generated Insights**: Alert berbasis analisis AI
 
----
-
-## 📊 API Usage Overview
-
-### **Tabel Lengkap: API yang Ditampilkan di Web**
-
-| **No** | **API / Data Source** | **Bagian Web / Komponen** | **Data yang Ditampilkan** | **Frekuensi** | **Auth** |
-|:---:|:---|:---|:---|:---:|:---:|
-| **1** | **Open-Meteo API** | **HOME - Hero Section** | Suhu saat ini, Status cuaca, Icon cuaca | Real-time | ❌ |
-| **2** | **Open-Meteo API** | **HOME - Weather Stats Cards** | Feels Like, Humidity, Wind Speed, Rain Probability | Real-time | ❌ |
-| **3** | **Open-Meteo API** | **HOME - Today Summary** | High/Low Temperature, AI Summary Text | Real-time | ❌ |
-| **4** | **Open-Meteo API** | **HOME - Environmental Insights** | Air Quality, UV Index, Sunrise Time, Sunset Time | Real-time | ❌ |
-| **5** | **Open-Meteo API** | **HOME - Prediction Chart** | Forecast 7/14/16 hari (Area Chart), Suhu per jam | Real-time | ❌ |
-| **6** | **Groq API** | **HOME - Today Summary** | AI Weather Analysis Text | On Demand | ✅ |
-| **7** | **Groq API** | **HOME - AI Reasoning Chat** | Chat responses tentang cuaca | On Demand | ✅ |
-| **8** | **Groq API** | **Smart Alerts** | AI-generated weather alerts & warnings | On Demand | ✅ |
-| **9** | **Nominatim API** | **Location Search / Input** | Nama lokasi, koordinat, detail alamat | On Demand | ❌ |
-| **10** | **Browser Geolocation API** | **Location Detection** | Latitude, Longitude koordinat pengguna | On Load | 📍 |
-| **11** | **OpenRouter API** | **AI Reasoning (Fallback)** | Alternative LLM responses jika Groq down | On Demand | ✅ |
-| **12** | **Open-Meteo API** | **WEATHER HISTORY View** | Historical weather data 7/14/16 hari lalu | On Demand | ❌ |
-| **13** | **Open-Meteo API** | **WEATHER PREDICTION View** | Detailed forecast dengan visualisasi | Real-time | ❌ |
-| **14** | **Groq API** | **ALERTS View** | AI-powered weather warnings & recommendations | On Demand | ✅ |
-
-### **Legend**
-- ✅ = Memerlukan API Key
-- ❌ = Tidak memerlukan API Key
-- 📍 = User Permission Required
-
----
-
-## 📍 Penjelasan Detail: API di Setiap Komponen
-
-### **1. Hero Section (Suhu Utama)**
-```
-┌─────────────────────────────────────┐
-│  Jakarta, Indonesia                 │
-│         28.5°C                      │
-│   Partly Cloudy ⛅                  │
-│                                     │
-│  Data dari: Open-Meteo API          │
-│  Update: Real-time (setiap jam)     │
-└─────────────────────────────────────┘
-```
-**API Used**: Open-Meteo (temperature_2m, weather_code)
-
----
-
-### **2. Weather Stats Cards**
-```
-┌──────────────────────────────────────┐
-│  Feels Like: 26.3°C (Open-Meteo)    │
-│  Humidity: 75% (Open-Meteo)         │
-│  Wind Speed: 12 km/h (Open-Meteo)   │
-│  Rain Probability: 40% (Open-Meteo) │
-│                                      │
-│  Sparkline Chart: Trend 24 jam       │
-└──────────────────────────────────────┘
-```
-**API Used**: Open-Meteo (relative_humidity_2m, wind_speed_10m, precipitation)
-
----
-
-### **3. Today Summary Card**
-```
-┌──────────────────────────────────────────┐
-│  TODAY'S SUMMARY                         │
-│                                          │
-│  Max: 32.1°C | Min: 24.3°C              │
-│  (dari Open-Meteo API)                  │
-│                                          │
-│  AI Summary (dari Groq API):            │
-│  "Cuaca cerah hari ini dengan suhu      │
-│   optimal untuk aktivitas outdoor..."   │
-│                                          │
-│  Updated by: Groq LLM                   │
-└──────────────────────────────────────────┘
-```
-**API Used**: 
-- Open-Meteo (temperature_2m_max, temperature_2m_min)
-- Groq API (AI analysis)
-
----
-
-### **4. Environmental Insights**
-```
-┌────────────────────────────────────┐
-│  AIR QUALITY              MODERATE │
-│  (Future Integration)              │
-│                                    │
-│  UV INDEX                      4   │
-│  (dari Open-Meteo API)             │
-│                                    │
-│  SUNRISE                   06:15   │
-│  (dari Open-Meteo API)             │
-│                                    │
-│  SUNSET                    18:20   │
-│  (dari Open-Meteo API)             │
-└────────────────────────────────────┘
-```
-**API Used**: Open-Meteo (uv_index_max, sunrise, sunset)
-
----
-
-### **5. Prediction Chart (16 Hari)**
-```
-┌─────────────────────────────────────────┐
-│  TEMPERATURE FORECAST                   │
-│                                         │
-│  Area Chart dengan 3 range:            │
-│  • 7 Days (Minggu)                     │
-│  • 14 Days (2 Minggu)                  │
-│  • 16 Days (Default)                   │
-│                                         │
-│  Data dari Open-Meteo API:             │
-│  - Daily max/min temperature           │
-│  - Hourly temperature per jam          │
-│  - Trend visualization                 │
-└─────────────────────────────────────────┘
-```
-**API Used**: Open-Meteo (temperature_2m, temperature_2m_max/min)
-
----
-
-### **6. AI Reasoning Chat Interface**
-```
-┌──────────────────────────────────────────┐
-│  💬 ASK WEATHER AI                       │
-│                                          │
-│  User: "Cuaca bagus untuk camping?"     │
-│                                          │
-│  AI Response (dari Groq API):           │
-│  "Ya! Cuaca besok sangat bagus untuk   │
-│   camping. Suhu 24-28°C, angin 8 km/h, │
-│   tidak ada prediksi hujan..."          │
-│                                          │
-│  Context: Real cuaca + Lokasi pengguna  │
-└──────────────────────────────────────────┘
-```
-**API Used**: 
-- Groq API (chat completion)
-- Open-Meteo (weather context)
-
----
-
-### **7. Location Search**
-```
-┌──────────────────────────────────────────┐
-│  📍 Search Location                      │
-│                                          │
-│  Input: "Tokyo"                         │
-│                                          │
-│  Results (dari Nominatim API):          │
-│  • Tokyo, Japan          35.6762°N...   │
-│  • East Tokyo...          35.7394°N...  │
-│  • Tokyo Bay...           35.6500°N...  │
-│                                          │
-│  Select & fetch cuaca untuk lokasi baru │
-└──────────────────────────────────────────┘
-```
-**API Used**: Nominatim (location search & reverse geocoding)
-
----
-
-### **8. Geolocation Detection**
-```
-Browser Geolocation API
-        ↓
-Detect User GPS
-        ↓
-Get Lat/Lon
-        ↓
-Nominatim Reverse Geocoding
-        ↓
-Get Location Name
-        ↓
-Fetch Weather dari Open-Meteo
-        ↓
-Display di Web
-```
-**API Used**: 
-- Browser Geolocation API (GPS)
-- Nominatim API (nama lokasi)
-- Open-Meteo API (data cuaca)
-
----
-
-### **9. Smart Alerts**
-```
-┌──────────────────────────────────────────┐
-│  ⚠️ WEATHER ALERTS                       │
-│                                          │
-│  🔴 HIGH: Heavy Rain Expected (2025-10-26)│
-│  Generated by Groq AI                    │
-│  "Bersiaplah untuk hujan lebat..."      │
-│                                          │
-│  🟡 MODERATE: Strong Wind (2025-10-27)   │
-│  Generated by Groq AI                    │
-│  "Angin kuat mencapai 25 km/h..."       │
-└──────────────────────────────────────────┘
-```
-**API Used**: 
-- Groq API (alert generation)
-- Open-Meteo API (forecast data analysis)
-
----
-
-### **10. Weather History View**
-```
-┌────────────────────────────────────┐
-│  WEATHER HISTORY                   │
-│                                    │
-│  Tampilkan data 7/14/16 hari lalu │
-│  Dari Open-Meteo API:             │
-│  - Daily max/min temp             │
-│  - Precipitation                  │
-│  - Weather conditions             │
-│  - Wind patterns                  │
-└────────────────────────────────────┘
-```
-**API Used**: Open-Meteo (historical forecast data)
+### ⚙️ Settings
+- Theme preferences
+- Notification settings
+- Unit preferences (°C/°F, km/h/m/s, etc.)
 
 ---
 
 ## 🛠️ Tech Stack
 
-### Frontend
-- **Framework**: Next.js 16.0.0 (App Router)
-- **Library**: React 19.2.0
-- **Language**: TypeScript 5.x
-- **Styling**: Tailwind CSS 4.x
-- **Animation**: Framer Motion (motion/react)
-- **UI Components**: shadcn/ui + Radix UI
-- **Charts**: Recharts 2.10.0
-- **3D Graphics**: COBE (Globe), OGL
+### Frontend Framework
+- **Next.js 16.0.0** - React framework dengan App Router
+- **React 19.2.0** - UI library
+- **TypeScript 5.x** - Type-safe development
 
-### Backend
-- **Runtime**: Node.js
-- **API Framework**: Next.js API Routes
-- **Database Cache**: In-memory (with TTL)
+### UI & Styling
+- **Tailwind CSS 4.x** - Utility-first CSS framework
+- **Framer Motion 11.0.0** - Animation library
+- **Shadcn/ui** - Pre-built accessible UI components
+- **Radix UI** - Unstyled, accessible primitives
 
-### External APIs
-- **Weather**: Open-Meteo API (JMA Global Forecast)
-- **LLM**: Groq API + OpenRouter API
-- **Geolocation**: Nominatim API (OpenStreetMap)
-- **Browser**: Native Geolocation API
+### Data Visualization
+- **Recharts 2.10.0** - React charting library
+- **COBE 0.6.3** - 3D globe visualization (future)
+- **OGL 1.0.11** - WebGL library
 
-### Development Tools
-- **Version Control**: Git
-- **Package Manager**: npm
-- **Linting**: ESLint 9
-- **Formatting**: Prettier
-- **Build**: Next.js Build System
+### State Management
+- **React Hooks** - useState, useEffect, useContext, useCallback
+- **Context API** - WeatherProvider untuk shared state
+
+### API & Services
+- **Open-Meteo API** - JMA Global Forecast + Environmental data
+- **OpenRouter API** - LLM integration (Grok, Claude, etc.)
+- **Nominatim OpenStreetMap** - Geolocation & location search
+
+### Forms & Validation
+- **React Hook Form 7.65.0** - Efficient form management
+- **Input OTP 1.4.2** - OTP input component
+
+### Utilities
+- **Lucide React 0.546.0** - Icon library
+- **Clsx 2.0.0** - Conditional classname utility
+- **Tailwind Merge 2.2.0** - Merge tailwind classes safely
+- **Sonner 2.0.7** - Toast notifications
+
+---
+
+## 🏗️ System Architecture
+
+### High-Level Architecture Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        ClimaSense AI Application                    │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  ┌──────────────────────┐          ┌──────────────────────┐       │
+│  │  CLIENT LAYER        │          │  SERVER LAYER        │       │
+│  ├──────────────────────┤          ├──────────────────────┤       │
+│  │ • Components         │◄────────►│ • API Routes         │       │
+│  │ • Hooks              │          │ • Services           │       │
+│  │ • Context API        │          │ • Middleware         │       │
+│  │ • State Management   │          │ • Error Handling     │       │
+│  └──────────────────────┘          └──────────────────────┘       │
+│           ▲                                  ▲                     │
+│           │                                  │                     │
+│           └──────────────────┬───────────────┘                     │
+│                              │                                     │
+│                   ┌──────────▼─────────────┐                       │
+│                   │   EXTERNAL APIs        │                       │
+│                   ├───────────────────────┤                        │
+│                   │ • Open-Meteo (JMA)    │                        │
+│                   │ • OpenRouter (LLM)    │                        │
+│                   │ • Nominatim (GeoLocation)                      │
+│                   └───────────────────────┘                        │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Data Flow Architecture
+
+```
+User Action / App Load
+        │
+        ▼
+┌──────────────────────────────┐
+│  Geolocation Detection       │
+│  (Browser API)               │
+└──────────┬───────────────────┘
+           │
+           ▼
+┌──────────────────────────────┐
+│  Save Location               │
+│  (localStorage)              │
+└──────────┬───────────────────┘
+           │
+           ▼
+┌──────────────────────────────┐
+│  Fetch Weather Data          │
+│  (Open-Meteo API)            │
+│  - JMA Forecast (16 days)    │
+│  - Environmental data        │
+└──────────┬───────────────────┘
+           │
+           ▼
+┌──────────────────────────────┐
+│  Cache Result                │
+│  (10 min TTL)                │
+└──────────┬───────────────────┘
+           │
+           ▼
+┌──────────────────────────────┐
+│  Generate AI Analysis        │
+│  (OpenRouter + Context)      │
+│  - AI Summary                │
+│  - Alerts                    │
+│  - Recommendations           │
+└──────────┬───────────────────┘
+           │
+           ▼
+┌──────────────────────────────┐
+│  Update UI Components        │
+│  - HeroSection               │
+│  - Charts                    │
+│  - Stats Cards               │
+│  - Alerts                    │
+└──────────────────────────────┘
+```
+
+---
+
+## 📁 Project Structure
+
+```
+whealthy_people_project1/
+│
+├── 📄 Configuration Files
+│   ├── package.json                 # Dependencies & scripts
+│   ├── tsconfig.json                # TypeScript config
+│   ├── tailwind.config.ts           # Tailwind CSS config
+│   ├── postcss.config.mjs           # PostCSS config
+│   ├── next.config.ts               # Next.js config
+│   ├── eslint.config.mjs            # ESLint config
+│   └── next-env.d.ts                # Next.js type definitions
+│
+├── 🌐 src/
+│   │
+│   ├── 📄 app/                      # Next.js App Router
+│   │   ├── layout.tsx               # Root layout with providers
+│   │   ├── page.tsx                 # Main entry point (ClimaSenseApp)
+│   │   ├── globals.css              # Global styles
+│   │   └── api/                     # API Routes
+│   │       ├── weather/
+│   │       │   └── forecast/[...route].ts
+│   │       └── ai/
+│   │           ├── chat/route.ts
+│   │           └── analyze/route.ts
+│   │
+│   ├── 🎨 components/               # React Components
+│   │   ├── layout/
+│   │   │   ├── AnimatedSidebar.tsx     # Desktop & mobile sidebar
+│   │   │   ├── BottomNav.tsx           # Mobile bottom navigation
+│   │   │   └── Header.tsx              # Mobile header
+│   │   │
+│   │   ├── weather/
+│   │   │   ├── Aurora.tsx              # Background aurora effect
+│   │   │   ├── features/
+│   │   │   │   ├── HeroSection.tsx     # Main weather display
+│   │   │   │   ├── WeatherStatsCards.tsx # Stats grid
+│   │   │   │   ├── TodaySummary.tsx    # Daily summary
+│   │   │   │   ├── EnvironmentalInsights.tsx # Air quality, UV, etc
+│   │   │   │   ├── PredictionChart.tsx # Temperature forecast
+│   │   │   │   ├── AIReasoning.tsx     # Chat interface
+│   │   │   │   ├── LocationCarousel.tsx # Multi-location nav
+│   │   │   │   ├── SmartAlerts.tsx     # Weather alerts
+│   │   │   │   ├── WeatherHistory.tsx  # Historical data
+│   │   │   │   └── WeatherPrediction.tsx # 16-day forecast
+│   │   │   │
+│   │   │   └── animations/
+│   │   │       ├── LoadingCloud.tsx    # Loading spinner
+│   │   │       ├── GlobeHint.tsx       # Interactive hint
+│   │   │       └── Sparkline.tsx       # Mini charts
+│   │   │
+│   │   └── ui/                       # Shadcn/UI Components
+│   │       ├── button.tsx
+│   │       ├── card.tsx
+│   │       ├── dialog.tsx
+│   │       ├── input.tsx
+│   │       ├── select.tsx
+│   │       ├── toast.tsx
+│   │       ├── skeleton.tsx
+│   │       └── ... (20+ components)
+│   │
+│   ├── 🎯 hooks/                     # Custom Hooks
+│   │   ├── useWeather.ts             # Weather data fetching
+│   │   ├── useGeolocation.ts         # Geolocation detection
+│   │   ├── useWeatherInsights.ts     # AI insights generation
+│   │   ├── useAI.ts                  # Generic AI hook
+│   │   ├── useAIWithLocation.ts      # AI with location context
+│   │   └── useTheme.ts               # Theme management
+│   │
+│   ├── 🔧 services/                  # Business Logic
+│   │   ├── weatherService.ts         # Open-Meteo API wrapper
+│   │   ├── openrouterService.ts      # OpenRouter API wrapper
+│   │   ├── weatherAlertsService.ts   # Alert generation
+│   │   ├── groqService.ts            # Groq API wrapper
+│   │   └── weatherContextChat.ts     # Context-aware chat
+│   │
+│   ├── 🎨 styles/                    # Global Styles
+│   │   └── globals.css               # Tailwind imports + custom CSS
+│   │
+│   ├── 📦 context/                   # Context API
+│   │   └── WeatherContext.tsx        # Shared weather context
+│   │
+│   ├── 📊 types/                     # TypeScript Definitions
+│   │   ├── weather.types.ts          # Weather API types
+│   │   ├── ai.types.ts               # AI service types
+│   │   └── api.types.ts              # API response types
+│   │
+│   ├── 🛠️ lib/                       # Utilities
+│   │   ├── utils.ts                  # General utilities
+│   │   ├── test-openrouter.ts        # Testing utilities
+│   │   └── cn.ts                     # Classname helper
+│   │
+│   ├── 📡 middleware/                # Middleware
+│   │   ├── aiLocationMiddleware.ts   # AI + Location middleware
+│   │   └── aiLocationMiddlewareInit.tsx # Middleware provider
+│   │
+│   └── 🔑 utils/                     # Additional utilities
+│
+├── 📚 panduan/                       # Reference UI Guide
+│   ├── src/
+│   │   ├── components/               # Reference components
+│   │   ├── guidelines/               # Design guidelines
+│   │   └── styles/                   # Reference styles
+│   └── CLIMASENSE_NEXTJS_GUIDE.md    # Detailed guide
+│
+├── 🗂️ public/                        # Static Assets
+│   ├── logo.png
+│   ├── favicon.ico
+│   └── ...
+│
+├── 📝 scripts/                       # Build/Dev Scripts
+│   └── debug-ai.js
+│
+└── 🌐 components_backup/             # Backup Components
+    └── (all component backups)
+```
+
+---
+
+## 🔄 Component Hierarchy & Data Flow
+
+### Complete Component Tree
+
+```
+App (Main Container - page.tsx)
+│
+├─ WeatherProvider (Context)
+│  └─ ClimaSenseAppContent
+│
+├─ Layout
+│  ├─ Aurora (Background Effect)
+│  ├─ AnimatedSidebar (Desktop)
+│  ├─ Header (Mobile)
+│  └─ BottomNav (Mobile - disabled)
+│
+├─ Main Content (Conditional based on activeView)
+│  │
+│  ├─ HOME View
+│  │  ├─ LocationCarousel
+│  │  ├─ SmartAlerts
+│  │  ├─ HeroSection
+│  │  │  ├─ Location & Time Display
+│  │  │  ├─ Temperature Display (count-up animation)
+│  │  │  └─ AI Summary Card
+│  │  │
+│  │  ├─ TodaySummary
+│  │  │  ├─ AI Generated Summary Text
+│  │  │  ├─ High/Low Temperature
+│  │  │  └─ Quick Stats (Sunrise, Sunset, Humidity, Wind)
+│  │  │
+│  │  ├─ WeatherStatsCards (Grid 2 columns)
+│  │  │  ├─ Feels Like (with Sparkline)
+│  │  │  ├─ Humidity (with Sparkline)
+│  │  │  ├─ Wind Speed (with Sparkline)
+│  │  │  └─ Rain Probability (with Sparkline)
+│  │  │
+│  │  ├─ EnvironmentalInsights
+│  │  │  ├─ Air Quality Score
+│  │  │  ├─ UV Index
+│  │  │  ├─ Sunrise Time
+│  │  │  └─ Sunset Time
+│  │  │
+│  │  ├─ PredictionChart
+│  │  │  ├─ Temperature Forecast (16 days)
+│  │  │  ├─ Range Selector (1h, 24h, 7d)
+│  │  │  └─ Interactive Legend
+│  │  │
+│  │  └─ AIReasoning
+│  │     ├─ Chat Messages
+│  │     ├─ Typing Indicator
+│  │     ├─ Input Field
+│  │     └─ Send Button
+│  │
+│  ├─ HISTORY View
+│  │  ├─ WeatherHistory (Historical Data)
+│  │  └─ WeatherPrediction (16-day Forecast)
+│  │
+│  ├─ ALERTS View
+│  │  └─ SmartAlerts (Expanded)
+│  │     ├─ Alert Cards (High/Moderate/Low severity)
+│  │     ├─ Alert Type Icons
+│  │     └─ Severity Badges
+│  │
+│  └─ SETTINGS View
+│     └─ Settings Placeholder (Coming Soon)
+│
+├─ GlobeHint (First Load Tooltip)
+│
+└─ Loading States
+   ├─ BoxLoader (Initial Load)
+   ├─ LocationErrorBoundary
+   ├─ GeolocationLoading
+   └─ WeatherDataLoading
+```
+
+### State Management Flow
+
+```typescript
+// App-level State
+activeView: 'home' | 'history' | 'weather-history' | 'weather-prediction' | 'alerts' | 'settings'
+isDark: boolean (auto-detect based on time)
+sidebarOpen: boolean (mobile only)
+sidebarExpanded: boolean (desktop only)
+isDesktop: boolean (responsive detection)
+isLoading: boolean (initial load)
+
+// Location State
+currentLocation: LocationCoordinates (from geolocation)
+savedLocations: LocationCoordinates[] (from localStorage)
+activeLocation: LocationCoordinates (selected for weather display)
+selectedLocationIndex: number
+showLocationOptions: boolean
+manualLocationInput: string
+isSearchingLocation: boolean
+
+// Weather State (from context)
+weatherData: CombinedWeatherData | null
+isWeatherLoading: boolean
+weatherError: WeatherAPIError | null
+
+// Geolocation State
+isGeoLoading: boolean
+geoError: string | null
+
+// AI State
+aiSummary: string | null
+aiAlerts: Alert[]
+
+// Data Flow
+User Action → State Update → Re-render → API Call → Cache Check → 
+Data Update → AI Processing → Context Update → Component Re-render
+```
 
 ---
 
 ## 📡 API Documentation
 
-### 1. **Open-Meteo API (Weather Data)**
+### Weather API Endpoints
 
-**Base URL**: `https://api.open-meteo.com/v1/forecast`
+#### 1. **Open-Meteo API (JMA Global Forecast)**
+- **Base URL**: `https://api.open-meteo.com/v1/forecast`
+- **Type**: REST (GET)
+- **Authentication**: No key required (free tier)
 
-**Type**: REST (GET)
-
-**Authentication**: No key required (free tier)
-
-#### Endpoint: `/forecast`
+##### Endpoint: `/forecast`
 
 **Query Parameters**:
 ```typescript
 {
-  latitude: number              // Location latitude
-  longitude: number             // Location longitude
-  hourly: string[]              // Hourly data fields
-  daily: string[]               // Daily data fields
-  forecast_days: number         // Days to forecast (1-16)
-  timezone: string              // Timezone (e.g., 'auto')
-  models: 'jma_gsm'            // Weather model (JMA Global Forecast)
+  latitude: number          // Location latitude
+  longitude: number         // Location longitude
+  hourly: string[]          // Hourly data fields
+  daily: string[]           // Daily data fields
+  forecast_days: number     // Days to forecast (1-16)
+  timezone: string          // Timezone (e.g., 'auto', 'Asia/Jakarta')
 }
 ```
 
-**Hourly Fields** (per jam untuk 16 hari):
+**Hourly Fields**:
 ```
-temperature_2m              // Suhu pada ketinggian 2m (°C)
-relative_humidity_2m        // Kelembaban relatif (%)
-pressure_msl                // Tekanan di permukaan laut (hPa)
-precipitation               // Curah hujan (mm)
-cloud_cover                 // Tutupan awan (%)
-wind_speed_10m              // Kecepatan angin 10m (km/h)
-weather_code                // Kode cuaca WMO
+temperature_2m              // Temperature in °C
+relative_humidity_2m        // Humidity percentage
+pressure_msl                // Atmospheric pressure (hPa)
+precipitation               // Precipitation amount (mm)
+cloud_cover                 // Cloud cover percentage
+wind_speed_10m              // Wind speed (km/h)
+weather_code                // WMO weather code
 ```
 
-**Daily Fields** (per hari):
+**Daily Fields**:
 ```
-temperature_2m_max          // Suhu maksimum harian (°C)
-temperature_2m_min          // Suhu minimum harian (°C)
-precipitation_sum           // Total curah hujan harian (mm)
-weather_code                // Kondisi cuaca dominan (WMO)
-uv_index_max                // Indeks UV maksimum
-sunrise                     // Waktu terbit matahari (ISO 8601)
-sunset                      // Waktu terbenam matahari (ISO 8601)
+temperature_2m_max          // Max temperature
+temperature_2m_min          // Min temperature
+precipitation_sum           // Total precipitation (mm)
+weather_code                // Primary weather code
+uv_index_max                // Max UV index
+sunrise                     // Sunrise time (ISO 8601)
+sunset                      // Sunset time (ISO 8601)
 ```
 
 **Example Request**:
@@ -378,11 +604,10 @@ sunset                      // Waktu terbenam matahari (ISO 8601)
 GET https://api.open-meteo.com/v1/forecast?
 latitude=-1.169
 &longitude=124.730
-&hourly=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,weather_code
-&daily=temperature_2m_max,temperature_2m_min,weather_code,uv_index_max,sunrise,sunset
+&hourly=temperature_2m,relative_humidity_2m,pressure_msl,precipitation,cloud_cover,wind_speed_10m,weather_code
+&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weather_code,uv_index_max,sunrise,sunset
 &forecast_days=16
 &timezone=auto
-&models=jma_gsm
 ```
 
 **Response Example**:
@@ -390,254 +615,163 @@ latitude=-1.169
 {
   "latitude": -1.169,
   "longitude": 124.730,
+  "elevation": 50,
   "timezone": "Asia/Makassar",
   "hourly": {
     "time": ["2025-10-25T00:00", "2025-10-25T01:00"],
     "temperature_2m": [28.5, 27.8],
     "relative_humidity_2m": [75, 78],
-    "precipitation": [0, 0.2],
-    "wind_speed_10m": [10, 12],
-    "weather_code": [61, 63]
+    "precipitation": [0, 0.2]
   },
   "daily": {
     "time": ["2025-10-25"],
     "temperature_2m_max": [32.1],
-    "temperature_2m_min": [24.3],
-    "uv_index_max": [8.5],
-    "sunrise": ["2025-10-25T05:50"],
-    "sunset": ["2025-10-25T18:10"]
+    "temperature_2m_min": [24.3]
   }
 }
 ```
 
----
+#### 2. **OpenRouter API (LLM Integration)**
+- **Base URL**: `https://openrouter.ai/api/v1`
+- **Type**: REST (POST)
+- **Authentication**: Bearer token (NEXT_PUBLIC_OPENROUTER_API_KEY)
 
-### 2. **Groq API (AI/LLM)**
-
-**Base URL**: `https://api.groq.com/openai/v1`
-
-**Type**: REST (POST)
-
-**Authentication**: Bearer Token (NEXT_PUBLIC_GROQ_API_KEY)
-
-#### Endpoint: `/chat/completions`
+##### Endpoint: `/chat/completions`
 
 **Request Body**:
 ```typescript
 {
-  model: 'llama-3.3-70b-versatile'      // Model Groq
+  model: 'x-ai/grok-code-fast-1'  // Model ID
   messages: [
     {
       role: 'system' | 'user' | 'assistant'
-      content: string
+      content: string                // Message content
     }
   ]
-  temperature?: number                   // 0-2 (default: 0.7)
-  max_tokens?: number                    // Response limit
-  top_p?: number                         // Diversity (default: 1.0)
-}
-```
-
-**Example Request**:
-```bash
-POST https://api.groq.com/openai/v1/chat/completions
-Authorization: Bearer $NEXT_PUBLIC_GROQ_API_KEY
-Content-Type: application/json
-
-{
-  "model": "llama-3.3-70b-versatile",
-  "messages": [
-    {
-      "role": "system",
-      "content": "You are a professional weather analyst..."
-    },
-    {
-      "role": "user",
-      "content": "Berikan ringkasan cuaca untuk Jakarta hari ini dengan suhu 28.5°C, kelembaban 75%..."
-    }
-  ],
-  "temperature": 0.7,
-  "max_tokens": 500
-}
-```
-
-**Response Example**:
-```json
-{
-  "id": "cmpl-xxx",
-  "object": "chat.completion",
-  "created": 1698098765,
-  "model": "llama-3.3-70b-versatile",
-  "choices": [
-    {
-      "index": 0,
-      "message": {
-        "role": "assistant",
-        "content": "Jakarta mengalami cuaca cerah dengan suhu yang hangat. Kondisi ideal untuk aktivitas outdoor. Kelembaban tinggi 75% membuat terasa lebih panas dari angka sebenarnya. Rekomendasi: gunakan sunscreen dan minum banyak air."
-      },
-      "finish_reason": "stop"
-    }
-  ],
-  "usage": {
-    "prompt_tokens": 120,
-    "completion_tokens": 85,
-    "total_tokens": 205
-  }
-}
-```
-
----
-
-### 3. **OpenRouter API (Alternative LLM)**
-
-**Base URL**: `https://openrouter.ai/api/v1`
-
-**Type**: REST (POST)
-
-**Authentication**: Bearer Token (NEXT_PUBLIC_OPENROUTER_API_KEY)
-
-#### Endpoint: `/chat/completions`
-
-**Request Body**:
-```typescript
-{
-  model: 'x-ai/grok-code-fast-1'        // Model OpenRouter
-  messages: [
-    {
-      role: 'system' | 'user' | 'assistant'
-      content: string
-    }
-  ]
-  temperature?: number
-  max_tokens?: number
+  temperature?: number              // Creativity (0-2)
+  max_tokens?: number               // Response limit
+  top_p?: number                    // Diversity
 }
 ```
 
 **Example Request**:
 ```bash
 POST https://openrouter.ai/api/v1/chat/completions
-Authorization: Bearer $NEXT_PUBLIC_OPENROUTER_API_KEY
+Authorization: Bearer YOUR_API_KEY
 Content-Type: application/json
-HTTP-Referer: https://wheather-prediction-app.vercel.app
-X-Title: ClimaSense AI Weather App
 
 {
   "model": "x-ai/grok-code-fast-1",
-  "messages": [...]
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a weather assistant..."
+    },
+    {
+      "role": "user",
+      "content": "What's the weather like?"
+    }
+  ]
 }
 ```
 
----
+**Response Example**:
+```json
+{
+  "id": "chatcmpl-xxx",
+  "object": "chat.completion",
+  "created": 1698098765,
+  "model": "x-ai/grok-code-fast-1",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "The weather is partly cloudy..."
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 50,
+    "completion_tokens": 120,
+    "total_tokens": 170
+  }
+}
+```
 
-### 4. **Nominatim API (Geolocation & Search)**
+#### 3. **Nominatim API (Geolocation)**
+- **Base URL**: `https://nominatim.openstreetmap.org`
+- **Type**: REST (GET)
+- **Authentication**: No key required
 
-**Base URL**: `https://nominatim.openstreetmap.org`
-
-**Type**: REST (GET)
-
-**Authentication**: No key required (free tier)
-
-#### Endpoint A: `/search` (Location Search)
+##### Endpoint: `/search`
 
 **Query Parameters**:
-```typescript
-{
-  q: string              // Location query
-  format: 'json'         // Response format
-  limit: number          // Number of results (default: 10)
-  addressdetails: 1      // Include address details
-  zoom: number           // Result zoom level
-}
+```
+q: string                    // Location name to search
+format: 'json'              // Response format
+limit: number               // Result limit
 ```
 
 **Example Request**:
 ```bash
-GET "https://nominatim.openstreetmap.org/search?
-q=Tokyo&
-format=json&
-limit=5&
-addressdetails=1"
+GET https://nominatim.openstreetmap.org/search?
+q=Jakarta
+&format=json
+&limit=5
 ```
 
 **Response Example**:
 ```json
 [
   {
-    "place_id": 123456789,
-    "lat": "35.6762",
-    "lon": "139.6503",
-    "display_name": "Tokyo, Japan",
+    "lat": "-6.2088",
+    "lon": "106.8456",
+    "display_name": "Jakarta, Indonesia",
     "address": {
-      "city": "Tokyo",
-      "state": "Tokyo",
-      "country": "Japan"
+      "city": "Jakarta",
+      "country": "Indonesia"
     }
   }
 ]
 ```
 
-#### Endpoint B: `/reverse` (Reverse Geocoding)
+### Custom API Routes
 
-**Query Parameters**:
+#### `/api/weather/forecast`
+- **Method**: POST
+- **Purpose**: Fetch weather forecast with caching
+- **Request**:
 ```typescript
 {
-  lat: number            // Latitude
-  lon: number            // Longitude
-  format: 'json'         // Response format
-  zoom: number           // Level of detail
-  addressdetails: 1      // Include address details
+  latitude: number
+  longitude: number
+  includeHourly?: boolean
+  hourlyCount?: number
 }
 ```
 
-**Example Request**:
-```bash
-GET "https://nominatim.openstreetmap.org/reverse?
-lat=-1.169&
-lon=124.730&
-format=json&
-addressdetails=1&
-zoom=10"
-```
-
-**Response Example**:
-```json
+#### `/api/ai/chat`
+- **Method**: POST
+- **Purpose**: Chat with AI assistant about weather
+- **Request**:
+```typescript
 {
-  "address": {
-    "village": "Motoling",
-    "county": "North Minahasa",
-    "state": "North Sulawesi",
-    "country": "Indonesia"
-  },
-  "display_name": "Motoling, North Minahasa, North Sulawesi, Indonesia",
-  "lat": "-1.169",
-  "lon": "124.730"
+  messages: AIMessage[]
+  context?: AIContext
 }
 ```
 
----
-
-### 5. **Browser Geolocation API**
-
-**Type**: Native Browser API (JavaScript)
-
-**Authentication**: User Permission
-
-**Example Usage**:
+#### `/api/ai/analyze`
+- **Method**: POST
+- **Purpose**: AI weather analysis
+- **Request**:
 ```typescript
-navigator.geolocation.getCurrentPosition(
-  (position) => {
-    const { latitude, longitude } = position.coords
-    console.log(`User Location: ${latitude}, ${longitude}`)
-  },
-  (error) => {
-    console.error(`Error: ${error.message}`)
-  },
-  {
-    enableHighAccuracy: false,
-    timeout: 8000,
-    maximumAge: 300000  // Cache 5 minutes
-  }
-)
+{
+  weatherContext: string
+  location: string
+}
 ```
 
 ---
@@ -645,43 +779,52 @@ navigator.geolocation.getCurrentPosition(
 ## 🚀 Installation & Setup
 
 ### Prerequisites
-- **Node.js** 18+ and npm
-- API Keys:
-  - `NEXT_PUBLIC_GROQ_API_KEY` - [Get from Groq Console](https://console.groq.com)
-  - `NEXT_PUBLIC_OPENROUTER_API_KEY` - [Get from OpenRouter](https://openrouter.ai)
+- Node.js 18.x or higher
+- npm or yarn package manager
+- Git
 
-### 1. Clone Repository
+### Step 1: Clone Repository
+
 ```bash
 git clone https://github.com/KevinJeremi/wheather-Prediction-App.git
-cd whealthy_people_project1
+cd wheather-Prediction-App
 ```
 
-### 2. Install Dependencies
+### Step 2: Install Dependencies
+
 ```bash
 npm install
+# atau
+yarn install
 ```
 
-### 3. Setup Environment Variables
+### Step 3: Setup Environment Variables
+
 Create `.env.local` file in root directory:
 
-```env
-# API Keys
-NEXT_PUBLIC_GROQ_API_KEY=your_groq_api_key_here
+```bash
+# Open-Meteo API (Free, no key needed)
+NEXT_PUBLIC_WEATHER_API_URL=https://api.open-meteo.com/v1
+
+# OpenRouter API (Get from https://openrouter.ai)
 NEXT_PUBLIC_OPENROUTER_API_KEY=your_openrouter_api_key_here
 
-# Optional: Default location for initial load
-NEXT_PUBLIC_DEFAULT_LAT=-1.169
-NEXT_PUBLIC_DEFAULT_LON=124.730
+# Optional: Groq API (Get from https://console.groq.com)
+NEXT_PUBLIC_GROQ_API_KEY=your_groq_api_key_here
 ```
 
-### 4. Run Development Server
+### Step 4: Run Development Server
+
 ```bash
 npm run dev
+# atau
+yarn dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:3000](http://localhost:3000) in browser.
 
-### 5. Build for Production
+### Step 5: Build for Production
+
 ```bash
 npm run build
 npm run start
@@ -692,130 +835,622 @@ npm run start
 ## 🔑 Environment Variables
 
 ### Required Variables
-```env
-# Groq API - Ultra-fast LLM inference
-NEXT_PUBLIC_GROQ_API_KEY=gsk_xxxxxxxxxxxxx
 
-# OpenRouter API - Alternative LLM provider
-NEXT_PUBLIC_OPENROUTER_API_KEY=sk-or-v1-xxxxxxxxxxxxx
-```
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `NEXT_PUBLIC_OPENROUTER_API_KEY` | OpenRouter API key for LLM | `sk-or-v1-xxx...` |
+| `NEXT_PUBLIC_WEATHER_API_URL` | Open-Meteo base URL | `https://api.open-meteo.com/v1` |
 
 ### Optional Variables
-```env
-# Default location on app load (Indonesia - Motoling)
-NEXT_PUBLIC_DEFAULT_LAT=-1.169
-NEXT_PUBLIC_DEFAULT_LON=124.730
 
-# Cache duration (in minutes)
-NEXT_PUBLIC_CACHE_DURATION=10
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `NEXT_PUBLIC_GROQ_API_KEY` | Groq API key (alternative LLM) | `undefined` |
+| `NODE_ENV` | Environment (development/production) | `development` |
+| `NEXT_PUBLIC_MAX_FORECAST_DAYS` | Max forecast days to fetch | `16` |
 
-# API endpoints (if using custom proxy)
-NEXT_PUBLIC_OPEN_METEO_URL=https://api.open-meteo.com/v1
-```
+### Getting API Keys
 
----
+#### OpenRouter API
+1. Visit https://openrouter.ai
+2. Sign up / Login
+3. Go to Settings → Keys
+4. Create new API key
+5. Copy to `.env.local`
 
-## 📱 Features Breakdown
-
-### Weather Display
-- Real-time temperature with count-up animation
-- Weather condition icons and descriptions
-- Feels like temperature
-- Wind speed and direction
-- Humidity level
-- Air quality (future)
-- UV Index
-
-### Forecast & Analytics
-- 16-day weather forecast
-- Hourly breakdown with charts
-- Temperature trend visualization
-- Precipitation predictions
-- Wind pattern analysis
-
-### AI Capabilities
-- Weather summary and insights
-- Personalized recommendations
-- Interactive Q&A chat
-- Smart alert generation
-- Context-aware responses
-
-### User Experience
-- Multi-location support
-- Search functionality
-- Favorite locations
-- Dark/Light mode
-- Responsive design
-- Offline support (cached data)
+#### Groq API
+1. Visit https://console.groq.com
+2. Sign up
+3. Create API key
+4. Copy to `.env.local`
 
 ---
 
-## 🏗️ Architecture
+## 📖 Usage Guide
 
-### Data Flow
-```
-User Interface
-    ↓
-State Management (React Hooks)
-    ↓
-Service Layer (API calls)
-    ↓
-External APIs (Open-Meteo, Groq, Nominatim)
-    ↓
-Cache Layer (In-memory with TTL)
-    ↓
-Component Rendering
-```
+### Basic Usage
 
-### API Integration Pattern
+#### 1. **App Initialization**
+
+App otomatis mendeteksi lokasi user via browser geolocation API.
+
 ```typescript
-// 1. Fetch weather data
-const weatherData = await fetchWeatherData(lat, lon)
+// Automatic on app load
+- Request browser permission
+- Get latitude & longitude
+- Save to localStorage
+- Fetch weather data
+```
 
-// 2. Process weather context
-const context = buildWeatherContext(weatherData)
+#### 2. **Manual Location Search**
 
-// 3. Generate AI analysis
-const analysis = await generateAIAnalysis(context)
+```typescript
+// Jika geolocation gagal atau user ingin ubah lokasi
+Click "Cari Lokasi Manual" button
+  ↓
+Enter city name (e.g., "Jakarta")
+  ↓
+Select from search results
+  ↓
+Location saved to localStorage
+  ↓
+Weather data fetched & displayed
+```
 
-// 4. Display to user
-return <Display weather={weatherData} ai={analysis} />
+#### 3. **View Weather Details**
+
+```
+HOME → See current weather
+HISTORY → Choose between:
+  - Weather History (past data)
+  - Forecast (16-day prediction)
+ALERTS → View active weather warnings
+SETTINGS → Configure preferences (coming soon)
+```
+
+#### 4. **Chat with AI**
+
+```typescript
+// In AIReasoning card
+1. Type your question in input field
+   Example: "Should I bring an umbrella?"
+2. Click send button
+3. AI analyzes weather context
+4. Response displayed with animation
 ```
 
 ---
 
-## 📊 Project Statistics
+## 🛠️ Development
 
-- **Total Components**: 40+
-- **Custom Hooks**: 8+
-- **API Integrations**: 5
-- **Lines of Code**: 15,000+
-- **Type Coverage**: 95%+
-- **Performance Score**: 90+
+### Available Scripts
+
+```bash
+# Development server (hot reload)
+npm run dev
+
+# Build production bundle
+npm run build
+
+# Start production server
+npm run start
+
+# Run linter
+npm run lint
+
+# Format code
+npm run format
+```
+
+### Code Structure Best Practices
+
+#### Component Pattern
+
+```typescript
+'use client'  // If using hooks
+
+import { motion } from 'framer-motion'
+import type { ComponentProps } from './types'
+
+interface MyComponentProps {
+  title: string
+  onClick?: () => void
+  variant?: 'default' | 'compact'
+}
+
+export function MyComponent({ 
+  title, 
+  onClick, 
+  variant = 'default' 
+}: MyComponentProps) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="component-classes"
+    >
+      {title}
+    </motion.div>
+  )
+}
+```
+
+#### Hook Pattern
+
+```typescript
+export function useWeatherData(location: LocationCoordinates) {
+  const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    // Fetch logic
+  }, [location])
+
+  return { data, loading, error }
+}
+```
+
+#### Service Pattern
+
+```typescript
+// services/weatherService.ts
+export class WeatherService {
+  async getWeather(lat: number, lon: number) {
+    // API call with error handling
+  }
+
+  async getForecast(lat: number, lon: number) {
+    // API call with caching
+  }
+}
+```
+
+### Debugging
+
+#### Enable Debug Logs
+
+```typescript
+// Browser console
+localStorage.setItem('DEBUG', 'true')
+```
+
+#### Monitor Network Requests
+
+Use browser DevTools → Network tab to inspect:
+- Weather API calls
+- AI API calls
+- Cache hits/misses
+
+#### Check Component State
+
+```typescript
+import { useEffect } from 'react'
+
+export function DebugComponent() {
+  useEffect(() => {
+    console.log('Component mounted')
+    return () => console.log('Component unmounted')
+  }, [])
+}
+```
+
+---
+
+## 🚀 Deployment
+
+### Deploy to Vercel (Recommended)
+
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Deploy
+vercel
+```
+
+### Deploy to Other Platforms
+
+#### Netlify
+```bash
+npm run build
+# Upload 'out' folder to Netlify
+```
+
+#### Docker
+
+```dockerfile
+FROM node:18-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+RUN npm run build
+
+EXPOSE 3000
+
+CMD ["npm", "start"]
+```
+
+```bash
+docker build -t climasense-ai .
+docker run -p 3000:3000 -e NEXT_PUBLIC_OPENROUTER_API_KEY=xxx climasense-ai
+```
+
+---
+
+## 📚 API References
+
+### JMA Global Forecast Model - Technical Details
+
+**Japan Meteorological Agency (JMA)** mengoperasikan salah satu sistem prediksi cuaca paling canggih di dunia. Berikut adalah detail teknis model yang digunakan ClimaSense AI:
+
+#### **Model Specifications**
+
+| Aspek | Detail |
+|-------|--------|
+| **Model Name** | JMA Global Forecast Model (GSM) |
+| **Grid Resolution** | 0.25° × 0.25° (~27 km) |
+| **Forecast Range** | 0-16 days (384 hours) |
+| **Update Frequency** | 4 kali per hari (00, 06, 12, 18 UTC) |
+| **Variables** | 60+ meteorological parameters |
+| **Computational System** | Earth Simulator - Supercomputer tercanggih |
+| **Data Assimilation** | 4D-Var method with satellite data |
+
+#### **Physical Parameters**
+
+JMA model memprediksi 60+ parameter atmosfer:
+
+**Thermodynamic Variables:**
+- Temperature (surface & upper levels)
+- Dew point temperature
+- Relative & absolute humidity
+- Pressure fields (surface & geopotential heights)
+
+**Dynamic Variables:**
+- Wind components (u, v)
+- Vertical velocity
+- Vorticity & divergence
+- Stream function
+
+**Hydrological Variables:**
+- Precipitation (liquid & solid)
+- Cloud water content
+- Cloud cover (layer-wise)
+- Soil moisture
+
+**Radiative Variables:**
+- Shortwave radiation
+- Longwave radiation
+- Solar insolation
+- Albedo
+
+#### **Model Physics**
+
+```
+Core Equations:
+├── Primitive Equations (Navier-Stokes for atmosphere)
+├── Thermodynamic Equation (Energy balance)
+├── Continuity Equation (Mass conservation)
+├── Equation of State (Ideal gas law)
+└── Hydrostatic Equation (Pressure gradient)
+
+Physical Processes:
+├── Convection (Cumulus & stratiform)
+├── Cloud Microphysics (Rain, snow, ice)
+├── Boundary Layer Turbulence
+├── Radiative Transfer (Shortwave & Longwave)
+├── Land-Surface Processes
+└── Ocean Heat Exchange
+```
+
+#### **Data Assimilation Strategy**
+
+JMA menggunakan **4D-Variational (4D-Var)** method:
+
+```
+Observation Data Sources:
+├── Satellites (Polar & Geostationary)
+│   ├─ Cloud-drift winds
+│   ├─ Radiances (NOAA, EUMETSAT, Himawari)
+│   └─ Atmospheric motion vectors
+│
+├── Ground Observations
+│   ├─ Weather stations (150,000+ globally)
+│   ├─ Buoys & ocean platforms
+│   └─ Radiosonde balloons
+│
+├── Radar Data
+│   ├─ Precipitation rates
+│   ├─ Reflectivity patterns
+│   └─ Velocity fields
+│
+└── Aircraft Reports (ACARS)
+    ├─ Temperature & wind
+    └─ Moisture profiles
+
+                    ↓
+            4D-Var Assimilation
+            (Window: 6 hours)
+            
+                    ↓
+            Analysis Increment
+            (Update model state)
+            
+                    ↓
+            Initial Conditions
+            (Start for prediction)
+```
+
+#### **Forecast Skill Evolution**
+
+```
+Day 1-3:  ████████████████████ 95%+ skill
+Day 4-5:  ██████████████████░░ 85-90% skill
+Day 6-7:  ████████████████░░░░ 80-85% skill
+Day 8-10: ██████████░░░░░░░░░░ 70-75% skill
+Day 11-14:████████░░░░░░░░░░░░ 60-65% skill
+Day 15-16:██████░░░░░░░░░░░░░░ 50-60% skill
+
+Legend:
+█ = High predictability
+░ = Lower predictability
+```
+
+#### **Integration with Open-Meteo**
+
+ClimaSense AI mengakses JMA data melalui **Open-Meteo API**, sebuah layanan gratis yang:
+
+1. **Agregasi Model Data**: Mengumpulkan dari berbagai sumber global
+2. **Quality Control**: Validasi dan cleaning data real-time
+3. **Standardisasi**: Format konsisten untuk semua lokasi
+4. **Caching**: Optimasi kecepatan dengan cache cerdas
+5. **API Exposure**: Endpoint REST yang sederhana & reliable
+
+```
+JMA Servers (Tokyo)
+        │
+        ├─► Process Forecast Output
+        ├─► Generate GRIB/NetCDF files
+        │
+        ▼
+Open-Meteo Servers
+        │
+        ├─► Download Latest Data
+        ├─► Parse & Validate
+        ├─► Cache in CDN
+        │
+        ▼
+ClimaSense App
+        │
+        ├─► Request Data via HTTP
+        ├─► Receive JSON Response
+        ├─► Display to User
+        │
+        ▼
+User Dashboard
+```
+
+#### **Why JMA Model Excels**
+
+✅ **Highest Accuracy**: Konsisten masuk top 3 model global  
+✅ **Advanced Physics**: 60+ parameter vs kompetitor dengan 30+  
+✅ **Best for Asia-Pacific**: Coverage terdetail di region ini  
+✅ **Rapid Update**: Output setiap 6 jam  
+✅ **Satellite Integration**: Menggunakan data satelit terbaru  
+✅ **Proven Track Record**: 70+ tahun pengalaman prediksi  
+
+#### **Comparison with Other Models**
+
+| Model | Resolution | Range | Accuracy (Day 3) | Region Strength |
+|-------|-----------|-------|---|---|
+| **JMA GSM** | 0.25° | 16 days | 95%+ | Asia-Pacific 🏆 |
+| GFS (NOAA) | 0.5° | 16 days | 92% | Global average |
+| ECMWF | 0.1° | 15 days | 93% | Europe strong |
+| ICON (DWD) | 0.25° | 10 days | 92% | Germany/Europe |
+| MetOffice | 0.22° | 15 days | 91% | UK/Europe |
+
+---
+
+### Weather Code (WMO)
+
+| Code | Condition | Icon |
+|------|-----------|------|
+| 0 | Clear | ☀️ |
+| 1-3 | Partly Cloudy | ⛅ |
+| 45-48 | Foggy | 🌫️ |
+| 51-67 | Drizzle/Rain | 🌧️ |
+| 71-85 | Snow | ❄️ |
+| 80-82 | Rain Showers | 🌦️ |
+| 85-86 | Snow Showers | 🌨️ |
+| 95-99 | Thunderstorm | ⛈️ |
+
+### UV Index Scale
+
+| Index | Risk Level | Color |
+|-------|-----------|-------|
+| 0-2 | Low | 🟢 |
+| 3-5 | Moderate | 🟡 |
+| 6-7 | High | 🟠 |
+| 8-10 | Very High | 🔴 |
+| 11+ | Extreme | 🟣 |
+
+### Alert Severity Levels
+
+| Level | Description | Color |
+|-------|-------------|-------|
+| Low | Advisory | 🔵 |
+| Moderate | Warning | 🟡 |
+| High | Severe | 🔴 |
+
+---
+
+## 🎨 Design System
+
+### Color Palette
+
+```css
+Primary Blue: #2F80ED
+Primary Cyan: #56CCF2
+Primary Light: #BBE1FA
+Success: #4ECDC4
+Warning: #FF6B6B
+Error: #d4183d
+```
+
+### Typography
+
+```css
+Font Family: Geist Sans, Geist Mono
+Base Size: 16px
+Line Height: 1.6
+
+h1: 24px (font-medium)
+h2: 20px (font-medium)
+h3: 18px (font-medium)
+body: 16px (font-normal)
+small: 14px (font-normal)
+tiny: 12px (font-normal)
+```
+
+### Spacing Scale
+
+```css
+Base unit: 4px
+Scale: 4px, 8px, 12px, 16px, 20px, 24px, 32px, 40px, 48px, 64px
+```
+
+### Border Radius
+
+```css
+Tight: 6px
+Small: 8px
+Medium: 10px
+Large: 12px
+Extra Large: 16px
+```
+
+---
+
+## 📊 Performance Optimization
+
+### Current Optimizations
+
+- ✅ **API Caching**: 10-minute TTL cache untuk weather data
+- ✅ **Request Debouncing**: Debounce location search requests
+- ✅ **Component Lazy Loading**: Dynamic imports for heavy components
+- ✅ **Image Optimization**: Next.js Image component
+- ✅ **Code Splitting**: Route-based & component-based splitting
+
+### Metrics Target
+
+- **First Contentful Paint (FCP)**: < 1.5s
+- **Largest Contentful Paint (LCP)**: < 2.5s
+- **Cumulative Layout Shift (CLS)**: < 0.1
+- **Time to Interactive (TTI)**: < 3.5s
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please follow these steps:
+### How to Contribute
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+1. Fork repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
+
+### Development Guidelines
+
+- Follow TypeScript strict mode
+- Use ESLint & Prettier
+- Write meaningful commit messages
+- Add tests for new features
+- Update documentation
 
 ---
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see [LICENSE](LICENSE) file for details.
 
 ---
 
-## 📞 Support
+## 🙋 Support & Contact
 
-For support, email support@climasense.app or open an issue on GitHub.
+### Issues & Bugs
+Report issues at: [GitHub Issues](https://github.com/KevinJeremi/wheather-Prediction-App/issues)
+
+### Discussion
+Join discussions at: [GitHub Discussions](https://github.com/KevinJeremi/wheather-Prediction-App/discussions)
+
+### Contact
+- **Author**: Kevin Jeremi
+- **GitHub**: [@KevinJeremi](https://github.com/KevinJeremi)
+
+---
+
+## 🎉 Acknowledgments
+
+### APIs & Services
+- [Open-Meteo](https://open-meteo.com/) - Weather data
+- [OpenRouter](https://openrouter.ai/) - LLM integration
+- [Nominatim](https://nominatim.org/) - Geolocation
+- [Groq](https://groq.com/) - Alternative LLM
+
+### UI/UX Resources
+- [Shadcn/ui](https://ui.shadcn.com/) - Component library
+- [Radix UI](https://www.radix-ui.com/) - Primitives
+- [Framer Motion](https://www.framer.com/motion/) - Animations
+- [Tailwind CSS](https://tailwindcss.com/) - Styling
+
+### Inspiration & References
+- Modern weather applications (Weather.com, Dark Sky)
+- AI chatbot interfaces
+- Real-time data visualization patterns
+
+---
+
+## 📈 Roadmap
+
+### Phase 1 (Current ✅)
+- ✅ Basic weather display
+- ✅ AI-powered analysis
+- ✅ Multi-location support
+- ✅ Dark/Light mode
+
+### Phase 2 (In Progress)
+- 🔄 Extended hourly forecast
+- 🔄 Advanced alert system
+- 🔄 Historical data tracking
+
+### Phase 3 (Planned)
+- 📅 User authentication
+- 📅 Saved preferences sync
+- 📅 Weather notifications (push)
+- 📅 Satellite imagery
+- 📅 Mobile app (React Native)
+
+### Phase 4 (Future)
+- 🔮 AR weather visualization
+- 🔮 Advanced radar integration
+- 🔮 Social sharing
+- 🔮 Weather community features
+
+---
+
+<div align="center">
+
+**Made with ❤️ by Kevin Jeremi**
+
+[⭐ Star us on GitHub](https://github.com/KevinJeremi/wheather-Prediction-App) | [🐛 Report Issues](https://github.com/KevinJeremi/wheather-Prediction-App/issues) | [💬 Discussions](https://github.com/KevinJeremi/wheather-Prediction-App/discussions)
+
+</div>
 
 ---
 
