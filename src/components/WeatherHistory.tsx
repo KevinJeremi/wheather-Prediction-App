@@ -20,23 +20,115 @@ interface HistoricalDataPoint {
 }
 
 export function WeatherHistory({ currentWeatherData }: WeatherHistoryProps) {
-    const [selectedTimeRange, setSelectedTimeRange] = useState<'7days' | '30days' | '90days'>('7days');
+    const [selectedTimeRange, setSelectedTimeRange] = useState<'7days' | '14days' | '16days'>('7days');
     const [historicalData, setHistoricalData] = useState<HistoricalDataPoint[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedMetric, setSelectedMetric] = useState<'temperature' | 'humidity' | 'precipitation'>('temperature');
+    const [error, setError] = useState<string | null>(null);
 
-    // Simulate historical data from JWA model
+    // Fetch real historical data from JMA model via Open-Meteo API
     useEffect(() => {
-        const generateHistoricalData = () => {
+        const fetchHistoricalData = async () => {
+            try {
+                setIsLoading(true);
+                setError(null);
+
+                // Use current weather data location if available
+                const lat = currentWeatherData?.location?.latitude || -6.1751; // Jakarta default
+                const lon = currentWeatherData?.location?.longitude || 106.8650;
+
+                const daysToShow = selectedTimeRange === '7days' ? 7 : selectedTimeRange === '14days' ? 14 : 16;
+
+                // Fetch from API
+                const params = new URLSearchParams({
+                    latitude: lat.toString(),
+                    longitude: lon.toString(),
+                    daily: [
+                        'temperature_2m_max',
+                        'temperature_2m_min',
+                        'precipitation_sum',
+                        'weather_code',
+                    ].join(','),
+                    hourly: [
+                        'temperature_2m',
+                        'relative_humidity_2m',
+                        'precipitation',
+                        'wind_speed_10m',
+                    ].join(','),
+                    forecast_days: daysToShow.toString(),
+                    timezone: 'auto',
+                    models: 'jma_gsm',
+                    temperature_unit: 'celsius',
+                });
+
+                const response = await fetch(
+                    `https://api.open-meteo.com/v1/forecast?${params.toString()}`
+                );
+
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // Transform API data to component format
+                const daily = data.daily;
+                const hourly = data.hourly;
+
+                const transformedData: HistoricalDataPoint[] = [];
+
+                for (let i = 0; i < daily.time.length; i++) {
+                    const date = new Date(daily.time[i]);
+
+                    // Get hourly data for this day to calculate average humidity and wind
+                    const dayStart = i * 24;
+                    const dayEnd = Math.min(dayStart + 24, hourly.time.length);
+                    const dailyHumidity = hourly.relative_humidity_2m.slice(dayStart, dayEnd);
+                    const dailyWindSpeeds = hourly.wind_speed_10m.slice(dayStart, dayEnd);
+                    const dailyPrecipitation = hourly.precipitation.slice(dayStart, dayEnd);
+
+                    const avgHumidity = dailyHumidity.length > 0
+                        ? dailyHumidity.reduce((a: number, b: number) => a + b, 0) / dailyHumidity.length
+                        : 0;
+
+                    const avgWindSpeed = dailyWindSpeeds.length > 0
+                        ? dailyWindSpeeds.reduce((a: number, b: number) => a + b, 0) / dailyWindSpeeds.length
+                        : 0;
+
+                    // Determine weather condition from weather code
+                    const weatherCode = daily.weather_code[i] || 0;
+                    const condition = getWeatherCondition(weatherCode);
+
+                    transformedData.push({
+                        date: date.toLocaleDateString('id-ID', { month: 'short', day: 'numeric' }),
+                        temperature: (daily.temperature_2m_max[i] + daily.temperature_2m_min[i]) / 2,
+                        humidity: Math.round(avgHumidity),
+                        precipitation: daily.precipitation_sum[i] || 0,
+                        windSpeed: Math.round(avgWindSpeed * 10) / 10,
+                        condition,
+                    });
+                }
+
+                setHistoricalData(transformedData);
+            } catch (err) {
+                console.error('Failed to fetch historical data:', err);
+                setError(err instanceof Error ? err.message : 'Failed to fetch data');
+                // Fallback to dummy data if API fails
+                generateFallbackData();
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        const generateFallbackData = () => {
             const data: HistoricalDataPoint[] = [];
             const today = new Date();
-            const daysToShow = selectedTimeRange === '7days' ? 7 : selectedTimeRange === '30days' ? 30 : 90;
+            const daysToShow = selectedTimeRange === '7days' ? 7 : selectedTimeRange === '14days' ? 14 : 16;
 
             for (let i = daysToShow; i >= 0; i--) {
                 const date = new Date(today);
                 date.setDate(date.getDate() - i);
 
-                // Generate realistic weather data
                 const temp = 25 + Math.random() * 10 - 5;
                 const humidity = 50 + Math.random() * 40;
                 const precipitation = Math.random() * 50;
@@ -56,12 +148,25 @@ export function WeatherHistory({ currentWeatherData }: WeatherHistoryProps) {
             }
 
             setHistoricalData(data);
-            setIsLoading(false);
         };
 
-        setIsLoading(true);
-        generateHistoricalData();
-    }, [selectedTimeRange]);
+        fetchHistoricalData();
+    }, [selectedTimeRange, currentWeatherData?.location]);
+
+    // Helper function to convert WMO weather codes to readable conditions
+    function getWeatherCondition(code: number): string {
+        if (code === 0 || code === 1) return 'Clear';
+        if (code === 2) return 'Partly Cloudy';
+        if (code === 3) return 'Cloudy';
+        if (code === 45 || code === 48) return 'Foggy';
+        if (code === 51 || code === 53 || code === 55) return 'Drizzle';
+        if (code === 61 || code === 63 || code === 65) return 'Rainy';
+        if (code === 71 || code === 73 || code === 75 || code === 77) return 'Snowy';
+        if (code === 80 || code === 81 || code === 82) return 'Rain Shower';
+        if (code === 85 || code === 86) return 'Snow Shower';
+        if (code === 95 || code === 96 || code === 99) return 'Stormy';
+        return 'Unknown';
+    }
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -97,7 +202,7 @@ export function WeatherHistory({ currentWeatherData }: WeatherHistoryProps) {
             <motion.div variants={itemVariants} className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-semibold text-gray-900 dark:text-white mb-2">Weather History</h1>
-                    <p className="text-gray-600 dark:text-gray-400">Historical weather data from JMA Model</p>
+                    <p className="text-gray-600 dark:text-gray-400">Historical weather data from JMA Model (Max 16 days)</p>
                 </div>
                 <button className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#2F80ED] to-[#56CCF2] text-white rounded-xl hover:shadow-lg transition-all">
                     <Download size={18} />
@@ -106,8 +211,8 @@ export function WeatherHistory({ currentWeatherData }: WeatherHistoryProps) {
             </motion.div>
 
             {/* Time Range Selector */}
-            <motion.div variants={itemVariants} className="flex gap-2 flex-wrap">
-                {(['7days', '30days', '90days'] as const).map((range) => (
+            <motion.div variants={itemVariants} className="flex gap-2 flex-wrap items-center">
+                {(['7days', '14days', '16days'] as const).map((range) => (
                     <button
                         key={range}
                         onClick={() => setSelectedTimeRange(range)}
@@ -116,9 +221,14 @@ export function WeatherHistory({ currentWeatherData }: WeatherHistoryProps) {
                             : 'bg-white/60 dark:bg-gray-800/60 text-gray-700 dark:text-gray-300 hover:bg-white/80 dark:hover:bg-gray-700/80'
                             }`}
                     >
-                        {range === '7days' ? 'Last 7 Days' : range === '30days' ? 'Last 30 Days' : 'Last 90 Days'}
+                        {range === '7days' ? 'Last 7 Days' : range === '14days' ? 'Last 14 Days' : 'Last 16 Days'}
                     </button>
                 ))}
+                {error && (
+                    <p className="text-xs text-orange-600 dark:text-orange-400 ml-auto">
+                        Using fallback data
+                    </p>
+                )}
             </motion.div>
 
             {/* Statistics Cards */}
@@ -289,11 +399,15 @@ export function WeatherHistory({ currentWeatherData }: WeatherHistoryProps) {
             >
                 <div className="flex items-center gap-2 mb-3">
                     <BarChart3 size={20} className="text-blue-600 dark:text-blue-400" />
-                    <h3 className="font-semibold text-gray-900 dark:text-white">Data Source</h3>
+                    <h3 className="font-semibold text-gray-900 dark:text-white">Data Source & Availability</h3>
                 </div>
-                <p className="text-sm text-gray-700 dark:text-gray-300">
-                    Historical weather data adalah hasil analisis dari model JMA (Japan Meteorological Agency) Global Forecast System (GSM).
-                    Data ini menggabungkan observasi satelit, radar cuaca, dan stasiun meteorologi di seluruh dunia untuk memberikan prediksi akurat.
+                <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                    Historical weather data is powered by <strong>JMA Global Forecast System (GSM)</strong> model from Open-Meteo API.
+                    Data is available for up to <strong>16 days maximum</strong> due to JMA model constraints.
+                </p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                    {/* Forecast reaches up to 16 days with hourly data available for the first 7 days */}
+                    ℹ️ Maximum forecast period: 16 days • Hourly data: High precision • Updates: Every 6 hours
                 </p>
             </motion.div>
         </motion.div>

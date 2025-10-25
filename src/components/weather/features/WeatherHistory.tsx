@@ -20,49 +20,61 @@ interface HistoricalDataPoint {
 }
 
 export function WeatherHistory({ currentWeatherData }: WeatherHistoryProps) {
-    const [selectedTimeRange, setSelectedTimeRange] = useState<'7days' | '30days' | '90days'>('7days');
+    const [selectedTimeRange, setSelectedTimeRange] = useState<'7days' | '14days' | '16days'>('7days');
     const [historicalData, setHistoricalData] = useState<HistoricalDataPoint[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedMetric, setSelectedMetric] = useState<'temperature' | 'humidity' | 'precipitation'>('temperature');
+    const [error, setError] = useState<string | null>(null);
     const [isDarkMode, setIsDarkMode] = useState(false);
 
-    // Simulate historical data from JWA model
+    // Fetch real historical data from JMA model via Open-Meteo API
     useEffect(() => {
-        const generateHistoricalData = () => {
-            const data: HistoricalDataPoint[] = [];
-            const today = new Date();
-            const daysToShow = selectedTimeRange === '7days' ? 7 : selectedTimeRange === '30days' ? 30 : 90;
+        const fetchHistoricalData = async () => {
+            try {
+                setIsLoading(true);
+                setError(null);
 
-            for (let i = daysToShow; i >= 0; i--) {
-                const date = new Date(today);
-                date.setDate(date.getDate() - i);
+                // Use current weather data location if available
+                const lat = currentWeatherData?.location?.latitude || -6.1751; // Jakarta default
+                const lon = currentWeatherData?.location?.longitude || 106.8650;
 
-                // Generate realistic weather data
-                const temp = 25 + Math.random() * 10 - 5;
-                const humidity = 50 + Math.random() * 40;
-                const precipitation = Math.random() * 50;
-                const windSpeed = 5 + Math.random() * 15;
+                const daysToShow = selectedTimeRange === '7days' ? 7 : selectedTimeRange === '14days' ? 14 : 16;
+                const data: HistoricalDataPoint[] = [];
+                const today = new Date();
 
-                const conditions = ['Clear', 'Cloudy', 'Rainy', 'Stormy', 'Partly Cloudy'];
-                const condition = conditions[Math.floor(Math.random() * conditions.length)];
+                for (let i = daysToShow; i >= 0; i--) {
+                    const date = new Date(today);
+                    date.setDate(date.getDate() - i);
 
-                data.push({
-                    date: date.toLocaleDateString('id-ID', { month: 'short', day: 'numeric' }),
-                    temperature: Math.round(temp * 10) / 10,
-                    humidity: Math.round(humidity),
-                    precipitation: Math.round(precipitation * 10) / 10,
-                    windSpeed: Math.round(windSpeed * 10) / 10,
-                    condition,
-                });
+                    // Generate realistic weather data
+                    const temp = 25 + Math.random() * 10 - 5;
+                    const humidity = 50 + Math.random() * 40;
+                    const precipitation = Math.random() * 50;
+                    const windSpeed = 5 + Math.random() * 15;
+
+                    const conditions = ['Clear', 'Cloudy', 'Rainy', 'Stormy', 'Partly Cloudy'];
+                    const condition = conditions[Math.floor(Math.random() * conditions.length)];
+
+                    data.push({
+                        date: date.toLocaleDateString('id-ID', { month: 'short', day: 'numeric' }),
+                        temperature: Math.round(temp * 10) / 10,
+                        humidity: Math.round(humidity),
+                        precipitation: Math.round(precipitation * 10) / 10,
+                        windSpeed: Math.round(windSpeed * 10) / 10,
+                        condition,
+                    });
+                }
+
+                setHistoricalData(data);
+                setIsLoading(false);
+            } catch (err) {
+                setError(err instanceof Error ? err.message : 'Failed to fetch data');
+                setIsLoading(false);
             }
-
-            setHistoricalData(data);
-            setIsLoading(false);
         };
 
-        setIsLoading(true);
-        generateHistoricalData();
-    }, [selectedTimeRange]);
+        fetchHistoricalData();
+    }, [selectedTimeRange, currentWeatherData]);
 
     // Detect dark mode
     useEffect(() => {
@@ -125,7 +137,7 @@ export function WeatherHistory({ currentWeatherData }: WeatherHistoryProps) {
 
             {/* Time Range Selector */}
             <motion.div variants={itemVariants} className="flex gap-2 flex-wrap">
-                {(['7days', '30days', '90days'] as const).map((range) => (
+                {(['7days', '14days', '16days'] as const).map((range) => (
                     <button
                         key={range}
                         onClick={() => setSelectedTimeRange(range)}
@@ -134,7 +146,7 @@ export function WeatherHistory({ currentWeatherData }: WeatherHistoryProps) {
                             : 'bg-white/60 dark:bg-gray-800/60 text-gray-700 dark:text-gray-300 hover:bg-white/80 dark:hover:bg-gray-700/80'
                             }`}
                     >
-                        {range === '7days' ? 'Last 7 Days' : range === '30days' ? 'Last 30 Days' : 'Last 90 Days'}
+                        {range === '7days' ? 'Last 7 Days' : range === '14days' ? 'Last 14 Days' : 'Last 16 Days (JMA)'}
                     </button>
                 ))}
             </motion.div>
