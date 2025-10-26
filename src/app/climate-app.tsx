@@ -236,7 +236,7 @@ function ClimaSenseAppContent() {
 
     // Calculate AI Context for better analysis
     const aiContext = useMemo(() => {
-        if (!weatherData) return null;
+        if (!weatherData || !weatherData.hourly || !weatherData.daily) return null;
 
         const current = weatherData.hourly[0];
         const today = weatherData.daily[0];
@@ -650,7 +650,7 @@ function ClimaSenseAppContent() {
                                 <SmartAlerts weatherData={weatherData} />
 
                                 {/* Hero Section */}
-                                {weatherData && (
+                                {weatherData && weatherData.hourly && weatherData.daily && (
                                     <HeroSection
                                         temp={Math.round(weatherData.hourly[0].temperature)}
                                         location={weatherData.location.name}
@@ -661,7 +661,7 @@ function ClimaSenseAppContent() {
                                 )}
 
                                 {/* Today's Summary */}
-                                {weatherData && (
+                                {weatherData && weatherData.hourly && weatherData.daily && (
                                     <TodaySummary
                                         summary={generateAISummary()}
                                         maxTemp={weatherData.daily[0].temperatureMax}
@@ -679,7 +679,7 @@ function ClimaSenseAppContent() {
                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                                     {/* Left: Weather Stats - 2 columns */}
                                     <div className="lg:col-span-2 grid grid-cols-2 gap-4">
-                                        {weatherData && (
+                                        {weatherData && weatherData.hourly && weatherData.daily && (
                                             <WeatherStatsCards
                                                 humidity={weatherData.hourly[0].humidity}
                                                 windSpeed={weatherData.hourly[0].windSpeed}
@@ -690,7 +690,7 @@ function ClimaSenseAppContent() {
                                     </div>
 
                                     {/* Right: Environmental Insights */}
-                                    {weatherData && (
+                                    {weatherData && weatherData.hourly && weatherData.daily && (
                                         <EnvironmentalInsights
                                             airQuality={weatherData.airQuality ? {
                                                 aqi: weatherData.airQuality.aqi,
@@ -710,7 +710,7 @@ function ClimaSenseAppContent() {
                                 {/* Chart and AI in one row for desktop */}
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                     <PredictionChart weatherData={weatherData} />
-                                    {weatherData && (
+                                    {weatherData && weatherData.hourly && (
                                         <AIReasoning pressure={weatherData.hourly[0].pressure} />
                                     )}
                                 </div>

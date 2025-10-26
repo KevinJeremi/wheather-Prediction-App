@@ -79,7 +79,8 @@ export function useWeatherContext() {
 export function useWeatherContextSummary() {
     const context = useWeatherContext()
 
-    if (!context.weatherData) {
+    // Return null if context tidak available atau weatherData tidak ada
+    if (!context || !context.weatherData) {
         return null
     }
 
