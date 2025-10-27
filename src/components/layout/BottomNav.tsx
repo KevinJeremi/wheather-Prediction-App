@@ -18,8 +18,8 @@ export function BottomNav({ activeView, setActiveView, onMenuClick }: BottomNavP
       icon: <Home size={20} />
     },
     {
-      label: 'History',
-      value: 'history' as const,
+      label: 'Forecast',
+      value: 'weather-prediction' as const,
       icon: <TrendingUp size={20} />
     },
     {

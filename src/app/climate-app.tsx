@@ -685,6 +685,7 @@ function ClimaSenseAppContent() {
                                                 windSpeed={weatherData.hourly[0].windSpeed}
                                                 rainProbability={Math.round((weatherData.daily[0].precipitationSum / 50) * 100)}
                                                 feelsLike={Math.round(weatherData.hourly[0].temperature)}
+                                                hourlyData={weatherData.hourly}
                                             />
                                         )}
                                     </div>
@@ -717,18 +718,13 @@ function ClimaSenseAppContent() {
                             </motion.div>
                         )}
 
-                        {activeView === 'history' && (
-                            <motion.div
-                                key="history"
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                className="text-center py-20"
-                            >
-                                <h2 className="text-2xl text-gray-600 dark:text-gray-300">Select a view below</h2>
-                                <p className="text-gray-500 dark:text-gray-400 mt-2">Choose Weather History or Forecast from the sidebar</p>
-                            </motion.div>
-                        )}
+                        {activeView === 'history' && (() => {
+                            // Auto-redirect to weather-history when History is clicked
+                            useEffect(() => {
+                                setActiveView('weather-history');
+                            }, []);
+                            return null;
+                        })()}
 
                         {activeView === 'weather-history' && (
                             <motion.div

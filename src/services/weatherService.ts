@@ -96,6 +96,7 @@ async function fetchJMAForecast(
             'temperature_2m_min',
             'precipitation_sum',
             'weather_code',
+            'wind_speed_10m_max',
         ].join(','),
         forecast_days: FORECAST_DAYS.toString(),
         timezone: 'auto',
@@ -346,6 +347,7 @@ function transformDailyData(
         sunrise: envDaily.sunrise[index],
         sunset: envDaily.sunset[index],
         weatherCode: daily.weather_code[index],
+        windSpeedMax: daily.wind_speed_10m_max[index],
     }))
 }
 

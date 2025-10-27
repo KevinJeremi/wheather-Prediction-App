@@ -31,32 +31,56 @@ export function WeatherPrediction({ currentWeatherData }: WeatherPredictionProps
     const [selectedMetric, setSelectedMetric] = useState<'temperature' | 'precipitation' | 'wind' | 'combined'>('temperature');
     const [isDarkMode, setIsDarkMode] = useState(false);
 
-    // Generate prediction data from JMA model
+    // Process real forecast data from JMA model API
     useEffect(() => {
-        const generatePredictionData = () => {
+        const processForecastData = () => {
+            if (!currentWeatherData || !currentWeatherData.daily) {
+                setIsLoading(false);
+                return;
+            }
+
             const data: PredictionDataPoint[] = [];
-            const today = new Date();
             const daysToShow = predictionDays === '5days' ? 5 : predictionDays === '10days' ? 10 : 15;
 
-            for (let i = 1; i <= daysToShow; i++) {
-                const date = new Date(today);
-                date.setDate(date.getDate() + i);
+            // Map weather code to emoji condition
+            const getConditionEmoji = (code: number): string => {
+                if (code <= 3) return '☀️ Sunny';
+                if (code <= 48) return '☁️ Cloudy';
+                if (code <= 55) return '🌧️ Drizzle';
+                if (code <= 65) return '🌧️ Rainy';
+                if (code <= 77) return '❄️ Snowy';
+                if (code <= 82) return '🌦️ Showers';
+                if (code <= 99) return '⛈️ Stormy';
+                return '⛅ Partly Cloudy';
+            };
 
-                // Generate realistic prediction with confidence decreasing over time
-                const baseTemp = 25;
-                const variance = Math.sin(i * 0.5) * 5;
-                const tempHigh = baseTemp + variance + (Math.random() * 4 - 2);
-                const tempLow = tempHigh - (5 + Math.random() * 5);
+            // Use available forecast days (up to 16 from JMA, starting from day 1)
+            const availableDays = Math.min(daysToShow, currentWeatherData.daily.length - 1);
+
+            // Debug: Check if windSpeedMax exists in first day
+            if (currentWeatherData.daily.length > 1) {
+                const firstDay = currentWeatherData.daily[1];
+                console.log('🌬️ WeatherPrediction Debug - First day data:', {
+                    date: firstDay.date,
+                    hasWindSpeedMax: 'windSpeedMax' in firstDay,
+                    windSpeedMax: firstDay.windSpeedMax,
+                    allFields: Object.keys(firstDay)
+                });
+            }
+
+            for (let i = 1; i <= availableDays; i++) {
+                const dayData = currentWeatherData.daily[i];
+                const date = new Date(dayData.date);
+                
+                const tempHigh = dayData.temperatureMax;
+                const tempLow = dayData.temperatureMin;
                 const temp = (tempHigh + tempLow) / 2;
 
-                const humidity = 50 + Math.random() * 40;
-                const precipitation = Math.random() > 0.7 ? Math.random() * 40 : 0;
-                const windSpeed = 5 + Math.random() * 15;
-                const confidence = 100 - (i * 5); // Confidence decreases with days
-                const uvIndex = Math.round((Math.random() * 8 + 2) * 10) / 10;
+                // Calculate confidence based on forecast day (decreases over time)
+                const confidence = Math.max(60, 95 - (i * 2.5));
 
-                const conditions = ['☀️ Sunny', '⛅ Partly Cloudy', '☁️ Cloudy', '🌧️ Rainy', '⛈️ Stormy'];
-                const condition = conditions[Math.floor(Math.random() * conditions.length)];
+                // Safely get wind speed with fallback
+                const windSpeedValue = dayData.windSpeedMax ?? 0;
 
                 data.push({
                     date: date.toLocaleDateString('id-ID', { month: 'short', day: 'numeric' }),
@@ -64,12 +88,12 @@ export function WeatherPrediction({ currentWeatherData }: WeatherPredictionProps
                     temperature: Math.round(temp * 10) / 10,
                     tempHigh: Math.round(tempHigh * 10) / 10,
                     tempLow: Math.round(tempLow * 10) / 10,
-                    humidity: Math.round(humidity),
-                    precipitation: Math.round(precipitation * 10) / 10,
-                    windSpeed: Math.round(windSpeed * 10) / 10,
-                    confidence,
-                    condition,
-                    uvIndex,
+                    humidity: Math.round(currentWeatherData.hourly[i * 24]?.humidity || 70),
+                    precipitation: Math.round(dayData.precipitationSum * 10) / 10,
+                    windSpeed: Math.round(windSpeedValue * 10) / 10,
+                    confidence: Math.round(confidence),
+                    condition: getConditionEmoji(dayData.weatherCode),
+                    uvIndex: Math.round(dayData.uvIndexMax * 10) / 10,
                 });
             }
 
@@ -78,8 +102,8 @@ export function WeatherPrediction({ currentWeatherData }: WeatherPredictionProps
         };
 
         setIsLoading(true);
-        generatePredictionData();
-    }, [predictionDays]);
+        processForecastData();
+    }, [predictionDays, currentWeatherData]);
 
     // Detect dark mode
     useEffect(() => {
@@ -202,12 +226,19 @@ export function WeatherPrediction({ currentWeatherData }: WeatherPredictionProps
                 variants={itemVariants}
                 className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl rounded-3xl p-6 border border-white/20 dark:border-gray-700/20 shadow-xl"
             >
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                    {selectedMetric === 'temperature' && '🌡️ Temperature Forecast'}
-                    {selectedMetric === 'precipitation' && '💧 Precipitation Forecast'}
-                    {selectedMetric === 'wind' && '💨 Wind Speed Forecast'}
-                    {selectedMetric === 'combined' && <><BarChart3 size={20} className="inline mr-2" />Combined Forecast</>}
-                </h3>
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {selectedMetric === 'temperature' && '🌡️ Temperature Forecast (Future)'}
+                        {selectedMetric === 'precipitation' && '💧 Precipitation Forecast (Future)'}
+                        {selectedMetric === 'wind' && '💨 Wind Speed Forecast (Future)'}
+                        {selectedMetric === 'combined' && <><BarChart3 size={20} className="inline mr-2" />Combined Forecast (Future)</>}
+                    </h3>
+                    <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                        <span>← Today</span>
+                        <span className="inline-block w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></span>
+                        <span>Future →</span>
+                    </span>
+                </div>
 
                 {isLoading ? (
                     <div className="h-80 flex items-center justify-center">
@@ -299,7 +330,12 @@ export function WeatherPrediction({ currentWeatherData }: WeatherPredictionProps
 
             {/* Daily Forecast Cards */}
             <motion.div variants={itemVariants} className="space-y-3">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Daily Details</h3>
+                <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Daily Forecast Details</h3>
+                    <span className="text-xs px-3 py-1 rounded-full bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 text-green-700 dark:text-green-300 font-medium">
+                        Next {predictionData.length} days ahead
+                    </span>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
                     {predictionData.map((forecast, idx) => (
                         <motion.div

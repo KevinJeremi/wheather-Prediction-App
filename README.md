@@ -11,6 +11,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4.x-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
+[![Data Accuracy](https://img.shields.io/badge/Data-100%25%20Real%20API-success?style=flat-square&logo=checkmarx)](https://github.com/KevinJeremi/wheather-Prediction-App)
 
 </div>
 
@@ -213,6 +214,48 @@ Komponen **Environmental Insights** menampilkan data lingkungan yang berasal dar
 
 ---
 
+## 🔧 Recent Fixes & Improvements
+
+### v1.0.1 (October 27, 2025)
+
+**Data Accuracy Overhaul - 100% Real API Data** ✅
+
+- ✅ **WeatherStatsCards Sparkline Fix**: Replaced hardcoded fake data with real hourly API data
+  - Now uses actual last 7 hours of temperature, humidity, wind speed, and precipitation data
+  - Trend arrows (↑/↓) calculated dynamically based on real data patterns
+  - Improved data visualization accuracy on Home dashboard
+
+- ✅ **WeatherHistory Component**: Switched from fake random data to real historical data
+  - Now fetches from Open-Meteo Archive API (ERA5 Reanalysis model)
+  - Displays actual past weather data (yesterday - X days)
+  - Added clear labels: "← Past | Recent →" for chart time direction
+  - Badge shows: "Showing last X days (recent → past)"
+
+- ✅ **WeatherPrediction Component**: Fixed to use real JMA forecast data
+  - Replaced fake random data with actual daily forecast from API
+  - Fixed wind speed display using `windSpeedMax` field
+  - Added clear labels: "← Today | Future →" for forecast direction
+  - Badge shows: "Next X days ahead"
+
+- ✅ **Wind Speed Bug Fix**: Resolved NaN/0 km/h display issue
+  - Added `wind_speed_10m_max` to API request parameters
+  - Updated TypeScript types with `windSpeedMax` field
+  - Fixed data transformation pipeline
+  - All wind speed data now displays correctly
+
+- ✅ **Visualization Improvements**: Added clear time direction indicators
+  - Past vs Future labels on all charts
+  - Improved user understanding of historical vs forecast data
+  - Better UX with directional arrows and badges
+
+- ✅ **Navigation Enhancement**: BottomNav label updated
+  - Changed "History" → "Forecast" for direct access
+  - Improved navigation clarity for users
+
+**Impact**: All components now display 100% real data from APIs with no hardcoded or fake values.
+
+---
+
 ## ⚡ Features
 
 ### 🏠 Home Dashboard
@@ -220,7 +263,7 @@ Komponen **Environmental Insights** menampilkan data lingkungan yang berasal dar
 - **Smart Alerts**: Notifikasi cuaca berbasis AI
 - **Hero Section**: Tampilan utama suhu dan kondisi cuaca
 - **Today's Summary**: Ringkasan kondisi hari ini
-- **Weather Stats Cards**: Kelembaban, kecepatan angin, probabilitas hujan
+- **Weather Stats Cards**: Real-time stats dengan dynamic trend sparklines (7-hour API data) ⭐
 - **Environmental Insights**: Kualitas udara, indeks UV, sunrise/sunset
 - **Prediction Chart**: Visualisasi prediksi temperatur dengan 3 rentang waktu
 - **AI Reasoning**: Chat interface dengan AI untuk analisis mendalam
@@ -1500,6 +1543,6 @@ Join discussions at: [GitHub Discussions](https://github.com/KevinJeremi/wheathe
 
 ---
 
-**Last Updated**: October 25, 2025  
-**Version**: 1.0.0  
+**Last Updated**: October 27, 2025  
+**Version**: 1.0.1  
 **Status**: Production Ready

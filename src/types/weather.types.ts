@@ -35,6 +35,7 @@ export interface DailyWeatherData {
     temperature_2m_min: number[]
     precipitation_sum: number[]
     weather_code: number[]
+    wind_speed_10m_max: number[]
 }
 
 export interface DailyWeatherUnits {
@@ -43,6 +44,7 @@ export interface DailyWeatherUnits {
     temperature_2m_min: string
     precipitation_sum: string
     weather_code: string
+    wind_speed_10m_max: string
 }
 
 export interface JMAForecastResponse {
@@ -117,6 +119,7 @@ export interface DailyWeatherSummary {
     sunrise: string
     sunset: string
     weatherCode: number
+    windSpeedMax: number
 }
 
 export interface CombinedWeatherData {
