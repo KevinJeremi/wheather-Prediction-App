@@ -66,8 +66,7 @@ export function HeroSection({ temp, location, localTime, condition, aiSummary }:
             animate={{ scale: 1, rotate: 0, opacity: 1 }}
             transition={{ delay: 0.2, type: 'spring', stiffness: 100 }}
             whileHover={{ scale: 1.05, rotate: 5 }}
-            className="hidden lg:flex flex-col justify-end items-center"
-            style={{ minHeight: '100%' }}
+            className="flex md:flex-col justify-center md:justify-end items-center flex-shrink-0"
           >
             <div className="relative -mb-6">
               {/* Glow effect behind mascot */}
@@ -84,13 +83,13 @@ export function HeroSection({ temp, location, localTime, condition, aiSummary }:
                 }}
               />
 
-              {/* Kiro Image - Larger and pepet ke bawah */}
+              {/* Kiro Image - Responsive size */}
               <Image
                 src="/maskot/idle_smile.png"
                 alt="Kiro Weather Assistant"
-                width={200}
-                height={250}
-                className="relative z-10 drop-shadow-2xl object-contain"
+                width={160}
+                height={200}
+                className="relative z-10 drop-shadow-2xl object-contain md:w-[200px] md:h-[250px]"
                 priority
               />
 
@@ -111,7 +110,7 @@ export function HeroSection({ temp, location, localTime, condition, aiSummary }:
           </motion.div>
 
           {/* Center-Right: Temperature and Summary */}
-          <div className="flex-1">
+          <div className="flex-1 w-full">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Temperature Section */}
               <div>
