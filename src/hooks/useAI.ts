@@ -1,7 +1,7 @@
 /**
  * Custom Hook: useAI
- * Simplified interface untuk Groq API
- * Dengan built-in state management dan error handling
+ * Simplified interface for Groq API
+ * With built-in state management and error handling
  */
 
 'use client'
@@ -184,12 +184,12 @@ export function useAI() {
                 )
 
                 if (!result.success || !result.content) {
-                    throw new Error(result.error?.message || 'Chat gagal')
+                    throw new Error(result.error?.message || 'Chat failed')
                 }
 
                 setResponse(result.content, true)
             } catch (err) {
-                const message = err instanceof Error ? err.message : 'Terjadi kesalahan'
+                const message = err instanceof Error ? err.message : 'An error occurred'
                 setError(message)
             }
         },
@@ -203,13 +203,13 @@ export function useAI() {
                 const result = await generateWeatherRecommendations(condition, context)
 
                 if (!result.success || !result.content) {
-                    throw new Error(result.error?.message || 'Rekomendasi gagal')
+                    throw new Error(result.error?.message || 'Recommendations failed')
                 }
 
-                addToHistory('user', `Rekomendasi untuk: ${condition}`)
+                addToHistory('user', `Recommendations for: ${condition}`)
                 setResponse(result.content, true)
             } catch (err) {
-                const message = err instanceof Error ? err.message : 'Terjadi kesalahan'
+                const message = err instanceof Error ? err.message : 'An error occurred'
                 setError(message)
             }
         },
@@ -223,13 +223,13 @@ export function useAI() {
                 const result = await analyzeWeatherTrend(predictions)
 
                 if (!result.success || !result.content) {
-                    throw new Error(result.error?.message || 'Analisis tren gagal')
+                    throw new Error(result.error?.message || 'Trend analysis failed')
                 }
 
-                addToHistory('user', 'Analisis tren cuaca')
+                addToHistory('user', 'Weather trend analysis')
                 setResponse(result.content, true)
             } catch (err) {
-                const message = err instanceof Error ? err.message : 'Terjadi kesalahan'
+                const message = err instanceof Error ? err.message : 'An error occurred'
                 setError(message)
             }
         },

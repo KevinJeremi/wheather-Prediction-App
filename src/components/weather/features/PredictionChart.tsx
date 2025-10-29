@@ -112,7 +112,7 @@ export function PredictionChart({ weatherData }: PredictionChartProps) {
       {/* Header dengan time range selector */}
       <div className="flex items-center justify-between mb-6 gap-4">
         <h3 className="text-lg font-medium text-gray-900 dark:text-white flex-shrink-0">
-          Temperature Forecast (JMA)
+          Temperature Forecast
         </h3>
         <div className="flex gap-2 flex-shrink-0">
           {(['24H', '7D', '16D'] as const).map((range) => (
@@ -249,9 +249,7 @@ export function PredictionChart({ weatherData }: PredictionChartProps) {
             </div>
           </>
         )}
-        <span className="text-xs text-gray-500 dark:text-gray-500 ml-auto flex-shrink-0">
-          Data from JMA Global Forecast
-        </span>
+
       </div>
     </motion.div>
   );

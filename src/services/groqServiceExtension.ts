@@ -1,8 +1,8 @@
 /**
  * Groq Service Extension: Location-Aware Chat
  * 
- * Extends groqService dengan capability untuk inject location context
- * ke dalam sistem prompt atau conversation history secara transparan
+ * Extends groqService with the capability to inject location context
+ * into the system prompt or conversation history transparently
  */
 
 import { getAILocationMiddleware, type EnhancedAIRequest } from '@/middleware/aiLocationMiddleware'
@@ -30,7 +30,7 @@ interface EnhancedChatOptions {
 // ============================================================
 
 /**
- * Build location context string untuk system prompt
+ * Build location context string for system prompt
  */
 function buildLocationSystemContext(location: LocationCoordinates): string {
     return `\n\nUser Location Context:
@@ -38,18 +38,18 @@ function buildLocationSystemContext(location: LocationCoordinates): string {
 - Latitude: ${location.latitude}
 - Longitude: ${location.longitude}
 
-Gunakan informasi lokasi ini untuk memberikan rekomendasi yang relevan secara geografis.`
+Use this location information to provide geographically relevant recommendations.`
 }
 
 /**
- * Build location info untuk conversation history (hidden)
+ * Build location info for conversation history (hidden)
  */
 function buildLocationHistoryMarker(location: LocationCoordinates): string {
     return `[User Location: ${location.name} (${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)})]`
 }
 
 /**
- * Enhance conversation history dengan location context
+ * Enhance conversation history with location context
  */
 function enhanceHistoryWithLocation(
     history: ConversationHistory,
@@ -60,7 +60,7 @@ function enhanceHistoryWithLocation(
         return history
     }
 
-    // Inject location marker di awal conversation
+    // Inject location marker at the beginning of conversation
     if (history.length === 0) {
         return [
             {
@@ -71,7 +71,7 @@ function enhanceHistoryWithLocation(
         ]
     }
 
-    // Atau append ke user message pertama
+    // Or append to first user message
     const enhanced = [...history]
     if (enhanced[0]?.role === 'user') {
         const marker = buildLocationHistoryMarker(location)

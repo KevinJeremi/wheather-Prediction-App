@@ -1,11 +1,11 @@
 /**
  * Hook: useAIWithLocation
  * 
- * Wrapper di atas useAI yang:
- * 1. Terintegrasi dengan Location Middleware
- * 2. Inject lokasi ke setiap AI request secara otomatis
- * 3. Maintain conversation history dengan location context
- * 4. Transparan untuk caller
+ * Wrapper on top of useAI that:
+ * 1. Integrated with Location Middleware
+ * 2. Auto-inject location to every AI request
+ * 3. Maintain conversation history with location context
+ * 4. Transparent to caller
  */
 
 'use client'
@@ -27,8 +27,8 @@ interface UseAIWithLocationState {
 
 interface UseAIWithLocationCallbacks {
     /**
-     * Chat dengan automatic location injection + weather data + forecast
-     * Lokasi ditambahkan otomatis, tidak perlu di-pass
+     * Chat with automatic location injection + weather data + forecast
+     * Location is added automatically, no need to pass
      */
     chatWithLocation: (message: string, weatherData?: {
         temperature?: number
@@ -52,7 +52,7 @@ interface UseAIWithLocationCallbacks {
     }) => Promise<void>
 
     /**
-     * Analyze weather dengan location context
+     * Analyze weather with location context
      */
     analyzeWeatherWithLocation: (
         context: string,
@@ -60,7 +60,7 @@ interface UseAIWithLocationCallbacks {
     ) => Promise<void>
 
     /**
-     * Get recommendations dengan location context
+     * Get recommendations with location context
      */
     getRecommendationsWithLocation: (
         condition: string,
@@ -91,7 +91,7 @@ export function useAIWithLocation() {
     const ai = useAI()
     const middleware = getAILocationMiddleware()
 
-    // Local state untuk location
+    // Local state for location
     const locationStateRef = useRef<UseAIWithLocationState>({
         userLocation: middleware.getCurrentLocation(),
         isLocationReady: false,
@@ -126,15 +126,15 @@ export function useAIWithLocation() {
     }, [middleware])
 
     // ========================================================
-    // Helper: Build prompt dengan location context
+    // Helper: Build prompt with location context
     // ========================================================
 
     const buildEnhancedPrompt = useCallback(
         (message: string): EnhancedAIRequest => {
             const enhanced = middleware.enhanceRequest(message)
 
-            // Optionally add location hint to message jika diinginkan
-            // (Ini untuk advanced usage - default disable)
+            // Optionally add location hint to message if desired
+            // (This is for advanced usage - default disable)
             // if (injectionEnabledRef.current && enhanced.userLocation) {
             //   message = `[📍 From ${enhanced.userLocation.name}] ${message}`
             // }
@@ -217,7 +217,7 @@ export function useAIWithLocation() {
 
             const enhanced = buildEnhancedPrompt(question || context)
 
-            // Enhance context dengan location info
+            // Enhance context with location info
             let enhancedContext = context
             if (enhanced.userLocation) {
                 enhancedContext = `
@@ -338,7 +338,7 @@ ${context ? context : ''}
 // ============================================================
 
 /**
- * Simple hook untuk location-aware chatting
+ * Simple hook for location-aware chatting
  */
 export function useLocationAwareChat() {
     const { chatWithLocation, isLoading, error, response, userLocation } = useAIWithLocation()
@@ -353,7 +353,7 @@ export function useLocationAwareChat() {
 }
 
 /**
- * Hook untuk location-aware weather analysis
+ * Hook for location-aware weather analysis
  */
 export function useLocationAwareWeatherAnalysis() {
     const { analyzeWeatherWithLocation, isLoading, error, response, userLocation } =

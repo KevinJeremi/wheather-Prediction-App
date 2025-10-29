@@ -399,14 +399,13 @@ export function WeatherHistory({ currentWeatherData }: WeatherHistoryProps) {
             >
                 <div className="flex items-center gap-2 mb-3">
                     <BarChart3 size={20} className="text-blue-600 dark:text-blue-400" />
-                    <h3 className="font-semibold text-gray-900 dark:text-white">Data Source & Availability</h3>
+                    <h3 className="font-semibold text-gray-900 dark:text-white">Forecast Information</h3>
                 </div>
                 <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
-                    Historical weather data is powered by <strong>JMA Global Forecast System (GSM)</strong> model from Open-Meteo API.
-                    Data is available for up to <strong>16 days maximum</strong> due to JMA model constraints.
+                    Get detailed historical weather data for your location.
+                    Data is available for up to <strong>16 days maximum</strong>.
                 </p>
                 <p className="text-xs text-gray-600 dark:text-gray-400">
-                    {/* Forecast reaches up to 16 days with hourly data available for the first 7 days */}
                     ℹ️ Maximum forecast period: 16 days • Hourly data: High precision • Updates: Every 6 hours
                 </p>
             </motion.div>

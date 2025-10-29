@@ -1,9 +1,9 @@
 /**
- * Cache Manager untuk Response Caching
- * Mengurangi token usage dengan cache response yang sama
+ * Cache Manager for Response Caching
+ * Reduce token usage by caching the same response
  * 
  * Benefits:
- * - 40-60% reduction untuk pertanyaan yang repeat
+ * - 40-60% reduction for repeated questions
  * - Faster response times
  * - Lower token usage
  */
@@ -24,10 +24,10 @@ export class ResponseCache {
     }
 
     /**
-     * Set value di cache dengan TTL
+     * Set value in cache with TTL
      * @param key - Cache key
      * @param value - Response value
-     * @param ttlMs - Time-to-live dalam milliseconds (default: 1 hour)
+     * @param ttlMs - Time-to-live in milliseconds (default: 1 hour)
      */
     set(key: string, value: string, ttlMs = this.DEFAULT_TTL): void {
         this.cache.set(key, {
@@ -39,9 +39,9 @@ export class ResponseCache {
     }
 
     /**
-     * Get value dari cache
+     * Get value from cache
      * @param key - Cache key
-     * @returns Cached response atau null jika expired/tidak ada
+     * @returns Cached response or null if expired/not found
      */
     get(key: string): string | null {
         const entry = this.cache.get(key)
@@ -63,7 +63,7 @@ export class ResponseCache {
     }
 
     /**
-     * Check if key exists di cache
+     * Check if key exists in cache
      */
     has(key: string): boolean {
         const entry = this.cache.get(key)
@@ -156,9 +156,9 @@ export class ResponseCache {
 export const responseCache = new ResponseCache()
 
 /**
- * Helper function untuk generate cache key dari parameters
+ * Helper function to generate cache key from parameters
  * @example
- * const key = generateCacheKey('analysis', 'Jakarta, 25°C', 'Cerah')
+ * const key = generateCacheKey('analysis', 'Jakarta, 25°C', 'Clear')
  */
 export function generateCacheKey(...params: (string | number | undefined)[]): string {
     return params
@@ -168,8 +168,8 @@ export function generateCacheKey(...params: (string | number | undefined)[]): st
 }
 
 /**
- * Helper function untuk hash string (untuk cache key)
- * Simple hash function, bukan cryptographic
+ * Helper function to hash string (for cache key)
+ * Simple hash function, not cryptographic
  */
 export function hashString(str: string): string {
     let hash = 0

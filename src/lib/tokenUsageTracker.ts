@@ -1,9 +1,9 @@
 /**
  * Token Usage Tracker
- * Monitor penggunaan token Groq API untuk mencegah hitting limits
+ * Monitor Groq API token usage to prevent hitting limits
  * 
- * Free Tier Groq: 14,400 requests/day dengan unlimited tokens per request
- * Tapi praktiknya ada limit implisit (~1-2M tokens/hari)
+ * Free Tier Groq: 14,400 requests/day with unlimited tokens per request
+ * But in practice there is an implicit limit (~1-2M tokens/day)
  */
 
 interface UsageStats {
@@ -75,7 +75,7 @@ export class TokenUsageTracker {
     }
 
     /**
-     * Get total usage untuk hari ini
+     * Get total usage for today
      */
     getDailyUsage(): {
         requests: number
@@ -251,7 +251,7 @@ export class TokenUsageTracker {
 export const tokenTracker = new TokenUsageTracker()
 
 /**
- * Helper function untuk estimate token count
+ * Helper function to estimate token count
  * Rough estimate: 1 token ≈ 4 characters
  */
 export function estimateTokenCount(text: string): number {
@@ -259,7 +259,7 @@ export function estimateTokenCount(text: string): number {
 }
 
 /**
- * Helper untuk middleware - track usage dari API calls
+ * Helper for middleware - track usage from API calls
  */
 export function createUsageTracking(requestType: 'chat' | 'analysis' | 'summary' | 'recommendation' | 'trend' = 'chat') {
     return {

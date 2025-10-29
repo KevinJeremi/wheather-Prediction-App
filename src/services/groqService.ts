@@ -12,6 +12,7 @@ import type {
 } from '@/types/ai.types'
 import { responseCache, generateCacheKey } from '@/lib/cacheManager'
 import { tokenTracker, estimateTokenCount } from '@/lib/tokenUsageTracker'
+import { generateKiroSystemPrompt } from './kiroPromptOptimizer'
 
 // ============================================================
 // Configuration
@@ -84,53 +85,8 @@ export class GroqError extends Error {
 // System Prompts
 // ============================================================
 
-const WEATHER_ANALYST_SYSTEM_PROMPT = `Anda adalah WeatherGPT, asisten cuaca cerdas berbasis AI yang tersedia di aplikasi ClimaSense.
-
-Peran Anda:
-- Memberikan analisis cuaca yang akurat dan mudah dipahami
-- Menjelaskan fenomena cuaca kompleks dengan bahasa sederhana
-- Memberikan rekomendasi praktis berdasarkan kondisi cuaca
-- Menjawab pertanyaan pengguna tentang cuaca dengan percaya diri
-- Bercakap santai dan ramah tentang topik terkait cuaca
-- Memberikan edukasi tentang meteorologi, iklim, dan fenomena cuaca
-- Menyarankan aktivitas yang sesuai dengan kondisi cuaca saat ini
-
-Karakteristik Komunikasi:
-- Ramah, profesional, dan santai
-- Ringkas namun informatif (usahakan 1-3 paragraf)
-- Gunakan emoji secara bijak untuk meningkatkan keterbacaan
-- Fokus pada informasi yang relevan dan actionable
-- Siap berdiskusi mendalam tentang topik cuaca yang diminati pengguna
-- Jangan ragu untuk memberikan penjelasan detail jika ditanya
-
-Format Respons:
-- Mulai dengan jawaban langsung atas pertanyaan pengguna
-- Jelaskan konteks dan alasan di balik jawaban
-- Berikan rekomendasi atau tips jika relevan
-- Akhiri dengan pertanyaan follow-up untuk mendorong percakapan lebih lanjut jika sesuai
-
-Topik yang Dapat Dibahas:
-- Analisis cuaca harian dan prakiraan
-- Fenomena cuaca ekstrem dan mitigasi
-- Perubahan iklim dan tren cuaca jangka panjang
-- Tips aktivitas outdoor berdasarkan cuaca
-- Teknologi meteorologi dan prediksi cuaca
-- Kesehatan dan cuaca (alergi, kesehatan mental, dst)
-- Persiapan untuk kondisi cuaca buruk
-- Dampak cuaca pada pertanian, transportasi, dan industri
-
-Gaya Percakapan:
-- Gunakan bahasa Indonesia yang natural dan mudah dipahami
-- Boleh menggunakan ungkapan casual dalam percakapan
-- Tunjukkan empati terhadap situasi cuaca pengguna
-- Berikan motivasi jika cuaca tidak mendukung aktivitas yang diinginkan
-
-Batasan:
-- Jangan memberikan diagnosis atau saran medis serius
-- Jangan membuat prediksi cuaca jangka panjang (lebih dari 14 hari) yang tidak akurat
-- Tetap fokus pada topik cuaca dan yang terkait (jangan bahas topik yang tidak ada hubungannya)
-- Jika tidak yakin, katakan dengan jujur dan tawarkan untuk mencari informasi lebih lanjut
-- Tidak boleh memberikan informasi palsu tentang cuaca ekstrem yang tidak terjadi`
+// Use optimized Kiro prompt to save tokens
+const WEATHER_ANALYST_SYSTEM_PROMPT = generateKiroSystemPrompt()
 
 // ============================================================
 // Rate Limiting & Retry Logic
@@ -170,7 +126,7 @@ function sleep(ms: number): Promise<void> {
 // ============================================================
 
 /**
- * Send a message to Groq API dengan retry logic untuk rate limiting
+ * Send a message to Groq API with retry logic for rate limiting
  * Groq is optimized for ultra-fast inference
  */
 async function callGroqAPI(
@@ -193,14 +149,14 @@ async function callGroqAPI(
         model: MODEL,
         messages,
         temperature: options?.temperature ?? 0.7,
-        max_tokens: options?.max_tokens ?? 1000,  // ✅ FIXED: Increased from 128 to 1000 to prevent truncation
+        max_tokens: options?.max_tokens ?? 500,  // Reduced from 1000 to 500 to save tokens (target Kiro: 100-150 tokens)
         top_p: options?.top_p ?? 0.95,
         stream: false,
     }
 
     let lastError: GroqError | null = null
 
-    // Retry logic untuk handle rate limiting
+    // Retry logic to handle rate limiting
     for (let attempt = 0; attempt <= RATE_LIMIT_CONFIG.maxRetries; attempt++) {
         try {
             const response = await fetch(`${GROQ_BASE_URL}/chat/completions`, {
@@ -327,7 +283,7 @@ async function callGroqAPI(
 }
 
 /**
- * Get AI weather analysis untuk kondisi cuaca
+ * Get AI weather analysis for weather conditions
  */
 export async function getWeatherAnalysis(
     weatherContext: string,
@@ -349,8 +305,8 @@ export async function getWeatherAnalysis(
         }
 
         const userMessage = userQuestion
-            ? `Kondisi cuaca: ${weatherContext}\n\nPertanyaan: ${userQuestion}`
-            : `Berikan analisis cuaca untuk kondisi berikut: ${weatherContext}`
+            ? `Weather condition: ${weatherContext}\n\nQuestion: ${userQuestion}`
+            : `Please provide a weather analysis for the following condition: ${weatherContext}`
 
         const messages: MessageRole[] = [
             {
@@ -365,7 +321,7 @@ export async function getWeatherAnalysis(
 
         const content = await callGroqAPI(messages, {
             temperature: 0.7,
-            max_tokens: 1000,  // ✅ FIXED: Increased from 50 to 1000 for complete analysis
+            max_tokens: 300,  // Reduced to save tokens
         })
 
         // ✅ Cache the response (6 hours TTL for stability)
@@ -386,7 +342,7 @@ export async function getWeatherAnalysis(
 }
 
 /**
- * Get AI summary untuk data cuaca harian
+ * Get AI summary for daily weather data
  */
 export async function getDailySummary(
     location: string,
@@ -409,9 +365,9 @@ export async function getDailySummary(
         }
 
         const weatherContext = `
-Lokasi: ${location}
-Cuaca Saat Ini: ${currentWeather}
-Prakiraan: ${forecast}
+Location: ${location}
+Current Weather: ${currentWeather}
+Forecast: ${forecast}
         `.trim()
 
         const messages: MessageRole[] = [
@@ -421,13 +377,13 @@ Prakiraan: ${forecast}
             },
             {
                 role: 'user',
-                content: `Buatkan ringkasan cuaca harian yang singkat dan informatif untuk:\n${weatherContext}`,
+                content: `Create a concise and informative daily weather summary for:\n${weatherContext}`,
             },
         ]
 
         const content = await callGroqAPI(messages, {
-            temperature: 0.6,
-            max_tokens: 800,  // ✅ FIXED: Increased from 40 to 800 for complete summary
+            temperature: 0.7,
+            max_tokens: 300,  // Reduced for brief summary
         })
 
         // ✅ Cache the response (6 hours TTL for stability)
@@ -448,33 +404,33 @@ Prakiraan: ${forecast}
 }
 
 /**
- * Conversation dengan AI assistant untuk cuaca
- * Supports multi-turn conversation dengan automatic location injection
+ * Conversation with AI assistant for weather
+ * Supports multi-turn conversation with automatic location injection
  */
 export async function chat(
     userMessage: string,
     conversationHistory?: ConversationHistory
 ): Promise<AIResponse> {
     try {
-        // Get location dari middleware
+        // Get location from middleware
         const { getAILocationMiddleware } = await import('@/middleware/aiLocationMiddleware')
         const middleware = getAILocationMiddleware()
         const userLocation = middleware.getCurrentLocation()
 
-        // Get weather context dari temporary store
+        // Get weather context from temporary store
         const { getWeatherContext } = await import('@/utils/weatherContextStore')
         const weatherContext = getWeatherContext()
 
         let systemPrompt = WEATHER_ANALYST_SYSTEM_PROMPT
 
-        // Inject location context ke system prompt jika available
+        // Inject location context to system prompt if available
         if (userLocation) {
             systemPrompt += `\n\nUser Location Context:
 - Location: ${userLocation.name}
 - Coordinates: ${userLocation.latitude}, ${userLocation.longitude}`
         }
 
-        // Inject current weather context jika available
+        // Inject current weather context if available
         if (weatherContext) {
             systemPrompt += `\n\nCurrent Weather at User Location:`
             if (weatherContext.temperature !== undefined) systemPrompt += `\n- Temperature: ${weatherContext.temperature}°C`
@@ -487,7 +443,7 @@ export async function chat(
             if (weatherContext.uvIndex !== undefined) systemPrompt += `\n- UV Index: ${weatherContext.uvIndex}`
             if (weatherContext.visibility !== undefined) systemPrompt += `\n- Visibility: ${weatherContext.visibility} km`
 
-            // Inject forecast data jika available
+            // Inject forecast data if available
             if (weatherContext.forecast && weatherContext.forecast.length > 0) {
                 systemPrompt += `\n\nTemperature Forecast (JMA) - Next ${weatherContext.forecast.length} days:`
                 weatherContext.forecast.forEach((day, idx) => {
@@ -499,7 +455,7 @@ export async function chat(
                 })
             }
 
-            systemPrompt += `\n\nGunakan data cuaca real-time dan forecast ini untuk memberikan rekomendasi dan analisis yang akurat dan spesifik untuk lokasi pengguna saat ini. Tunjukkan tren cuaca berdasarkan forecast JMA yang tersedia.`
+            systemPrompt += `\n\nUse the real-time weather data and forecast to provide accurate and location-specific recommendations and analysis for the user's current location. Show weather trends based on the available JMA forecast.`
         }
 
         const messages: MessageRole[] = [
@@ -530,7 +486,7 @@ export async function chat(
 
         const content = await callGroqAPI(messages, {
             temperature: 0.8,
-            max_tokens: 1200,  // ✅ FIXED: Increased from 60 to 1200 for complete chat response
+            max_tokens: 400,  // Optimized for chat response (target Kiro: 100-150 tokens actual)
         })
 
         return {
@@ -566,10 +522,10 @@ export async function generateWeatherRecommendations(
             }
         }
 
-        let prompt = `Berdasarkan kondisi cuaca: ${weatherCondition}\n\nBerikan rekomendasi praktis untuk aktivitas sehari-hari.`
+        let prompt = `Based on the weather condition: ${weatherCondition}\n\nProvide practical recommendations for daily activities.`
 
         if (userContext) {
-            prompt += `\n\nKonteks tambahan: ${userContext}`
+            prompt += `\n\nAdditional context: ${userContext}`
         }
 
         const messages: MessageRole[] = [
@@ -585,7 +541,7 @@ export async function generateWeatherRecommendations(
 
         const content = await callGroqAPI(messages, {
             temperature: 0.7,
-            max_tokens: 1000,  // ✅ FIXED: Increased from 40 to 1000 for complete recommendations
+            max_tokens: 300,  // Reduced for recommendations
         })
 
         // ✅ Cache the response (6 hours TTL for stability)
@@ -642,13 +598,13 @@ export async function analyzeWeatherTrend(
             },
             {
                 role: 'user',
-                content: `Analisis tren cuaca berikut dan berikan insights:\n${predictionText}`,
+                content: `Analyze the following weather trends and provide insights:\n${predictionText}`,
             },
         ]
 
         const content = await callGroqAPI(messages, {
             temperature: 0.7,
-            max_tokens: 1000,  // ✅ FIXED: Increased from 50 to 1000 for complete trend analysis
+            max_tokens: 300,  // Reduced for trend analysis
         })
 
         // ✅ Cache the response (6 hours TTL for stability)
@@ -673,7 +629,7 @@ export async function analyzeWeatherTrend(
 // ============================================================
 
 function handleGroqError(error: unknown): AIResponse {
-    let errorMessage = 'Terjadi kesalahan saat memproses permintaan AI'
+    let errorMessage = 'An error occurred while processing the AI request'
     let errorCode = 'UNKNOWN_ERROR'
 
     if (error instanceof GroqError) {

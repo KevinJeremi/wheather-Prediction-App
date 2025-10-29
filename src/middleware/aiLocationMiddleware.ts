@@ -1,11 +1,11 @@
 /**
  * AI Location Middleware
  * 
- * Middleware layer yang:
- * 1. Deteksi lokasi user secara otomatis
- * 2. Simpan koordinat dalam cache (tidak di UI)
- * 3. Inject koordinat ke setiap request LLM secara transparan
- * 4. Manage geolocation state secara internal
+ * Middleware layer that:
+ * 1. Auto-detect user location
+ * 2. Store coordinates in cache (not in UI)
+ * 3. Inject coordinates to each LLM request transparently
+ * 4. Manage geolocation state internally
  */
 
 import type { LocationCoordinates } from '@/types/weather.types'
@@ -56,7 +56,7 @@ class LocationCacheManager {
     }
 
     /**
-     * Set lokasi ke cache
+     * Set location to cache
      */
     setLocation(coordinates: LocationCoordinates): void {
         this.cache = {
@@ -72,14 +72,14 @@ class LocationCacheManager {
     }
 
     /**
-     * Get lokasi dari cache
+     * Get location from cache
      */
     getLocation(): LocationCoordinates | null {
         return this.cache.coordinates
     }
 
     /**
-     * Check apakah cache masih valid
+     * Check if cache is still valid
      */
     isValid(): boolean {
         if (!this.cache.coordinates) return false
@@ -327,8 +327,8 @@ class AILocationMiddleware {
     }
 
     /**
-     * Enhance AI request dengan lokasi otomatis
-     * Ini adalah fungsi utama middleware - transparan ke caller
+     * Enhance AI request with automatic location
+     * This is the main middleware function - transparent to caller
      */
     enhanceRequest(message: string): EnhancedAIRequest {
         const userLocation = this.cache.getLocation()
@@ -338,7 +338,7 @@ class AILocationMiddleware {
             userLocation,
         }
 
-        // Tambah implicit context jika konfigurasi memungkinkan
+        // Add implicit context if configuration allows
         if (this.config.includeLocationInPrompt && userLocation) {
             enhancedRequest.implicitContext = this.buildLocationContext(userLocation)
         }
@@ -356,8 +356,8 @@ class AILocationMiddleware {
     }
 
     /**
-     * Build implicit context string untuk prompt
-     * (Opsional - bisa di-disable)
+     * Build implicit context string for prompt
+     * (Optional - can be disabled)
      */
     private buildLocationContext(location: LocationCoordinates): string {
         return `(User Location Context - Hidden: ${location.name} [${location.latitude}, ${location.longitude}])`

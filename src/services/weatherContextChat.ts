@@ -1,14 +1,14 @@
 /**
  * Enhanced Weather Context Chat
- * Integrasi AI dengan weather context untuk pemahaman lebih baik
+ * AI integration with weather context for better understanding
  */
 
 import type { ConversationHistory, AIMessage } from '@/types/ai.types'
 import { chat as baseChat } from '@/services/groqService'
 
 /**
- * Enhanced chat function yang mengirim weather context ke AI
- * Sehingga AI lebih memahami situasi cuaca pengguna
+ * Enhanced chat function that sends weather context to AI
+ * So AI better understands the user's weather situation
  */
 export async function chatWithWeatherContext(
     userMessage: string,
@@ -37,7 +37,7 @@ export async function chatWithWeatherContext(
     }
 ): Promise<{ success: boolean; content?: string; error?: { message: string } }> {
     try {
-        // Jika ada weather context, tambahkan sebagai system context
+        // If weather context exists, add it as system context
         let enhancedMessage = userMessage
 
         if (weatherContext) {
@@ -45,7 +45,7 @@ export async function chatWithWeatherContext(
             enhancedMessage = `${userMessage}\n\n${weatherInfo}`
         }
 
-        // Call original chat function dengan enhanced message
+        // Call original chat function with enhanced message
         const result = await baseChat(enhancedMessage, conversationHistory)
 
         return result
@@ -61,7 +61,7 @@ export async function chatWithWeatherContext(
 }
 
 /**
- * Build a structured weather context string untuk AI
+ * Build a structured weather context string for AI
  */
 function buildWeatherContextString(weatherContext: {
     location?: string
@@ -85,30 +85,30 @@ function buildWeatherContextString(weatherContext: {
     timezone?: string
     lastUpdate?: string
 }): string {
-    const lines: string[] = ['[KONTEKS CUACA REAL-TIME]']
+    const lines: string[] = ['[REAL-TIME WEATHER CONTEXT]']
 
     if (weatherContext.location) {
-        lines.push(`📍 Lokasi: ${weatherContext.location}`)
+        lines.push(`📍 Location: ${weatherContext.location}`)
     }
 
     if (weatherContext.temperature !== undefined) {
-        lines.push(`🌡️ Suhu Saat Ini: ${weatherContext.temperature}°C`)
+        lines.push(`🌡️ Current Temperature: ${weatherContext.temperature}°C`)
     }
 
     if (weatherContext.condition) {
-        lines.push(`☁️ Kondisi: ${weatherContext.condition}`)
+        lines.push(`☁️ Condition: ${weatherContext.condition}`)
     }
 
     if (weatherContext.humidity !== undefined) {
-        lines.push(`💧 Kelembaban: ${weatherContext.humidity}%`)
+        lines.push(`💧 Humidity: ${weatherContext.humidity}%`)
     }
 
     if (weatherContext.windSpeed !== undefined) {
-        lines.push(`💨 Kecepatan Angin: ${weatherContext.windSpeed} km/h`)
+        lines.push(`💨 Wind Speed: ${weatherContext.windSpeed} km/h`)
     }
 
     if (weatherContext.pressure !== undefined) {
-        lines.push(`🔽 Tekanan: ${weatherContext.pressure} mb`)
+        lines.push(`🔽 Pressure: ${weatherContext.pressure} mb`)
     }
 
     if (weatherContext.uvIndex !== undefined) {
@@ -117,15 +117,15 @@ function buildWeatherContextString(weatherContext: {
     }
 
     if (weatherContext.precipitationProbability !== undefined) {
-        lines.push(`🌧️ Probabilitas Hujan: ${weatherContext.precipitationProbability}%`)
+        lines.push(`🌧️ Precipitation Probability: ${weatherContext.precipitationProbability}%`)
     }
 
     if (weatherContext.visibility !== undefined) {
-        lines.push(`👁️ Visibilitas: ${weatherContext.visibility} km`)
+        lines.push(`👁️ Visibility: ${weatherContext.visibility} km`)
     }
 
     if (weatherContext.airQuality) {
-        lines.push(`🌍 Kualitas Udara: AQI ${weatherContext.airQuality.aqi} (${weatherContext.airQuality.aqiLevel}), PM2.5: ${weatherContext.airQuality.pm25} µg/m³`)
+        lines.push(`🌍 Air Quality: AQI ${weatherContext.airQuality.aqi} (${weatherContext.airQuality.aqiLevel}), PM2.5: ${weatherContext.airQuality.pm25} µg/m³`)
     }
 
     if (weatherContext.sunrise && weatherContext.sunset) {
@@ -133,7 +133,7 @@ function buildWeatherContextString(weatherContext: {
     }
 
     if (weatherContext.maxTemp !== undefined && weatherContext.minTemp !== undefined) {
-        lines.push(`📊 Range Hari Ini: ${weatherContext.maxTemp}°C (Max) - ${weatherContext.minTemp}°C (Min)`)
+        lines.push(`📊 Today's Range: ${weatherContext.maxTemp}°C (Max) - ${weatherContext.minTemp}°C (Min)`)
     }
 
     if (weatherContext.timezone) {
@@ -141,10 +141,10 @@ function buildWeatherContextString(weatherContext: {
     }
 
     if (weatherContext.lastUpdate) {
-        lines.push(`⏰ Update Terakhir: ${new Date(weatherContext.lastUpdate).toLocaleString('id-ID')}`)
+        lines.push(`⏰ Last Update: ${new Date(weatherContext.lastUpdate).toLocaleString('en-US')}`)
     }
 
-    lines.push('[END KONTEKS]')
+    lines.push('[END CONTEXT]')
 
     return lines.join('\n')
 }

@@ -2,8 +2,16 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Bot, User, Loader2, AlertCircle, Trash2 } from 'lucide-react';
+import { Send, Bot, User, Loader2, AlertCircle, MapPin, Cloud, Droplets } from 'lucide-react';
 import { useAIWithLocation } from '@/hooks/useAIWithLocation';
+import { injectLocationToRequest } from '@/services/groqServiceExtension';
+import { KiroMascot } from '@/components/KiroMascot';
+import {
+  createOptimizedPrompt,
+  validateTokenBudget,
+  getQuickResponse,
+  shortenMessage
+} from '@/services/kiroPromptOptimizer';
 
 interface AIReasoningProps {
   pressure?: number;
@@ -16,17 +24,12 @@ interface AIReasoningProps {
   cloudCover?: number;
   uvIndex?: number;
   visibility?: number;
-  forecast?: Array<{
-    date?: string
-    time?: string
-    temp?: number
-    minTemp?: number
-    maxTemp?: number
-    condition?: string
-    precipitation?: number
-  }>;
 }
 
+/**
+ * AIReasoning Component
+ * Chat interface for AI Weather Assistant with Weather Context support
+ */
 export function AIReasoning({
   pressure = 1009,
   location = 'Unknown Location',
@@ -37,35 +40,65 @@ export function AIReasoning({
   precipitation,
   cloudCover,
   uvIndex,
-  visibility,
-  forecast
+  visibility
 }: AIReasoningProps) {
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState<Array<{ role: 'assistant' | 'user', content: string, timestamp?: string }>>([
-    {
-      role: 'assistant',
-      content: 'Halo! 👋 Saya WeatherGPT, asisten cuaca AI Anda. Saya siap membantu menjawab pertanyaan tentang cuaca, memberikan analisis kondisi, rekomendasi aktivitas, atau sekadar berdiskusi tentang fenomena cuaca. Ada yang bisa saya bantu hari ini?',
-      timestamp: new Date().toISOString()
-    }
-  ]);
-  const [responseCount, setResponseCount] = useState(0);
+  const [messages, setMessages] = useState<Array<{ role: 'assistant' | 'user', content: string, timestamp?: string }>>([]);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [lastAIResponse, setLastAIResponse] = useState(''); // For detecting Kiro mood
+  const [tokenWarning, setTokenWarning] = useState<string | null>(null);
 
-  const { isLoading, error, response, chatWithLocation, clearError } = useAIWithLocation();
+  const { isLoading, error, response, chatWithLocation, userLocation, isLocationReady, clearError } = useAIWithLocation();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
-  // Auto scroll ke pesan terbaru ketika sudah 3 response
-  const scrollToBottom = () => {
-    if (responseCount >= 3) {
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
+  // Initialize chat with default message (location will be displayed from middleware)
+  useEffect(() => {
+    if (!isInitialized && isLocationReady) {
+      const detectedLocation = userLocation?.name || location;
+
+      // Random fun greetings for variety!
+      const funGreetings = [
+        `Heyyyy! 👋✨ Kiro here, ready to be your weather buddy!`,
+        `Hiiii! 🌟 Kiro arrived! *dramatic entrance* ✨`,
+        `Yuhuu! 👋😄 Kiro reporting for duty! What weather info are you looking for today?`,
+        `Heyyy! 🤖💙 I missed you! How can I help?`,
+      ];
+
+      const randomGreeting = funGreetings[Math.floor(Math.random() * funGreetings.length)];
+
+      const initialMessage = `${randomGreeting}
+
+📍 ${detectedLocation} | 🌡️ ${temperature}°C | ${condition}
+
+I can help you with:
+✨ Real-time weather information
+🎯 Activity tips based on weather  
+💬 Random chat (I love chatting!)
+😄 Weather dad jokes (unlimited stock!)
+
+What would you like to know? 😊`;
+
+      setMessages([
+        {
+          role: 'assistant',
+          content: initialMessage,
+          timestamp: new Date().toISOString()
+        }
+      ]);
+      setLastAIResponse(initialMessage);
+      setIsInitialized(true);
     }
+  }, [isInitialized, isLocationReady, userLocation, location, temperature, condition, pressure]);
+
+  // Auto scroll to latest message
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isLoading, responseCount]);
+  }, [messages, isLoading]);
 
   // Update messages when response comes from OpenRouter
   useEffect(() => {
@@ -76,23 +109,48 @@ export function AIReasoning({
         timestamp: new Date().toISOString()
       };
       setMessages(prev => [...prev, aiMessage]);
-      setResponseCount(prev => prev + 1);
+      setLastAIResponse(response); // Update for mood detection
     }
   }, [response, isLoading]);
 
   const handleSendMessage = async () => {
     if (!message.trim() || isLoading) return;
 
+    // Clear previous warnings
+    setTokenWarning(null);
+
+    // Check for quick responses (save API calls)
+    const quickReply = getQuickResponse(message);
+    if (quickReply) {
+      const userMessage = {
+        role: 'user' as const,
+        content: message,
+        timestamp: new Date().toISOString()
+      };
+      const aiMessage = {
+        role: 'assistant' as const,
+        content: quickReply,
+        timestamp: new Date().toISOString()
+      };
+      setMessages(prev => [...prev, userMessage, aiMessage]);
+      setLastAIResponse(quickReply);
+      setMessage('');
+      return;
+    }
+
+    // Shorten message if too long
+    const processedMessage = shortenMessage(message, 200);
+
     // Add user message
     const userMessage = {
       role: 'user' as const,
-      content: message,
+      content: processedMessage,
       timestamp: new Date().toISOString()
     };
     setMessages(prev => [...prev, userMessage]);
     setMessage('');
 
-    // Build weather context
+    // Build weather context from props
     const weatherContext = {
       temperature,
       humidity,
@@ -100,17 +158,24 @@ export function AIReasoning({
       pressure,
       condition,
       precipitation,
-      cloudCover,
-      uvIndex,
-      visibility,
-      forecast
+      location: userLocation?.name || location
     };
 
-    // Send to AI dengan weather data + forecast
+    // Create optimized prompt
+    const optimizedPrompt = createOptimizedPrompt(processedMessage, weatherContext);
+
+    // Validate token budget
+    const validation = validateTokenBudget(optimizedPrompt.estimatedTokens);
+    if (!validation.isValid) {
+      setTokenWarning(validation.warning || 'Message is too long');
+      return;
+    }
+
+    // Send to AI with location injection + weather data
     try {
-      await chatWithLocation(message, weatherContext);
+      await chatWithLocation(optimizedPrompt.userPrompt, weatherContext);
     } catch (err) {
-      console.error('Failed to send message:', err);
+      console.error('❌ Failed to send message:', err);
     }
   };
 
@@ -120,44 +185,41 @@ export function AIReasoning({
     }
   };
 
-  const handleClearConversation = () => {
-    setMessages([
-      {
-        role: 'assistant',
-        content: 'Halo! 👋 Saya WeatherGPT, asisten cuaca AI Anda. Saya siap membantu menjawab pertanyaan tentang cuaca, memberikan analisis kondisi, rekomendasi aktivitas, atau sekadar berdiskusi tentang fenomena cuaca. Ada yang bisa saya bantu hari ini?',
-        timestamp: new Date().toISOString()
-      }
-    ]);
-    setResponseCount(0);
-    setMessage('');
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3 }}
-      className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-3xl p-5 md:p-6 shadow-[0_4px_25px_rgba(0,0,0,0.08)] border border-white/50 dark:border-gray-700/50 h-[400px] flex flex-col"
+      className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-3xl p-5 md:p-6 shadow-[0_4px_25px_rgba(0,0,0,0.08)] border border-white/50 dark:border-gray-700/50 h-[500px] flex flex-col"
     >
-      <div className="flex items-center gap-2 mb-4 justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#2F80ED] to-[#56CCF2] flex items-center justify-center">
-            <Bot className="w-4 h-4 text-white" />
+      {/* Header with Kiro Mascot */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          {/* Kiro Mascot - Animated */}
+          <div className="relative">
+            <KiroMascot
+              message={lastAIResponse}
+              isTyping={isLoading}
+              className="w-12 h-12"
+            />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-            AI Weather Assistant
-          </h3>
+          <div>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center gap-2">
+              Kiro
+              <span className="text-xs px-2 py-0.5 bg-gradient-to-br from-[#2F80ED] to-[#56CCF2] text-white rounded-full">
+                AI
+              </span>
+            </h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {isLoading ? 'Thinking...' : 'Smart Weather Assistant'}
+            </p>
+          </div>
         </div>
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={handleClearConversation}
-          disabled={messages.length <= 1 && !message}
-          className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          title="Clear conversation"
-        >
-          <Trash2 className="w-4 h-4" />
-        </motion.button>
+
+        {/* Token Usage Indicator (optional) */}
+        <div className="text-xs text-gray-400 dark:text-gray-500">
+          💚 Token Saved
+        </div>
       </div>
 
       {/* Error Alert */}
@@ -176,6 +238,26 @@ export function AIReasoning({
               className="text-xs text-red-600 dark:text-red-400 mt-1 hover:underline"
             >
               Dismiss
+            </button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Token Warning */}
+      {tokenWarning && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-3 p-3 bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700 rounded-xl flex items-start gap-2"
+        >
+          <AlertCircle className="w-4 h-4 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm text-yellow-800 dark:text-yellow-200">{tokenWarning}</p>
+            <button
+              onClick={() => setTokenWarning(null)}
+              className="text-xs text-yellow-600 dark:text-yellow-400 mt-1 hover:underline"
+            >
+              OK
             </button>
           </div>
         </motion.div>
@@ -209,12 +291,21 @@ export function AIReasoning({
               className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div className={`flex items-start gap-2 max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse gap-2' : ''}`}>
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${msg.role === 'user'
-                  ? 'bg-[#2F80ED] text-white'
-                  : 'bg-gradient-to-br from-[#2F80ED] to-[#56CCF2] text-white'
-                  }`}>
-                  {msg.role === 'user' ? <User className="w-3 h-3" /> : <Bot className="w-3 h-3" />}
-                </div>
+                {msg.role === 'assistant' ? (
+                  // Kiro avatar untuk AI
+                  <div className="w-8 h-8 flex-shrink-0">
+                    <KiroMascot
+                      message={msg.content}
+                      isTyping={false}
+                      className="w-full h-full"
+                    />
+                  </div>
+                ) : (
+                  // User avatar
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 bg-[#2F80ED] text-white">
+                    <User className="w-3 h-3" />
+                  </div>
+                )}
                 <div className={`rounded-2xl px-4 py-2 text-sm ${msg.role === 'user'
                   ? 'bg-[#2F80ED] text-white'
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
@@ -233,14 +324,18 @@ export function AIReasoning({
               className="flex justify-start"
             >
               <div className="flex items-start gap-2 max-w-[85%]">
-                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#2F80ED] to-[#56CCF2] flex items-center justify-center flex-shrink-0">
-                  <Bot className="w-3 h-3 text-white" />
+                {/* Kiro typing animation */}
+                <div className="w-8 h-8 flex-shrink-0">
+                  <KiroMascot
+                    isTyping={true}
+                    className="w-full h-full"
+                  />
                 </div>
                 <div className="rounded-2xl px-4 py-3 text-sm bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
                   <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                    <div className="w-2 h-2 bg-[#2F80ED] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                    <div className="w-2 h-2 bg-[#56CCF2] rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                    <div className="w-2 h-2 bg-[#2F80ED] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                   </div>
                 </div>
               </div>
@@ -259,7 +354,7 @@ export function AIReasoning({
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder="Tanya tentang cuaca, fenomena alam, atau tips aktivitas..."
+          placeholder="Ask about weather, natural phenomena, or activity tips..."
           disabled={isLoading}
           className="flex-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2F80ED]/20 focus:border-[#2F80ED] disabled:opacity-50 placeholder:text-gray-400 dark:placeholder:text-gray-500"
         />

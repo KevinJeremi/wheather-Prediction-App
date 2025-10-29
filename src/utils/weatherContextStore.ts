@@ -1,7 +1,7 @@
 /**
  * Weather Context Temp Store
- * Temporary store untuk pass weather data dari component ke groqService
- * tanpa perlu modify signature dari semua functions
+ * Temporary store to pass weather data from component to groqService
+ * without needing to modify signatures of all functions
  */
 
 interface WeatherContextData {

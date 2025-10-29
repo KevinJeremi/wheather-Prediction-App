@@ -11,7 +11,6 @@ import { Header } from '@/components/layout/Header';
 import { TodaySummary } from '@/components/weather/features/TodaySummary';
 import { EnvironmentalInsights } from '@/components/weather/features/EnvironmentalInsights';
 import { LocationCarousel } from '@/components/weather/features/LocationCarousel';
-import { SmartAlerts } from '@/components/weather/features/SmartAlerts';
 import Aurora from '@/components/weather/Aurora';
 import { LoadingCloud } from '@/components/weather/animations/LoadingCloud';
 import { GlobeHint } from '@/components/weather/animations/GlobeHint';
@@ -150,10 +149,15 @@ function ClimaSenseAppContent() {
         enabled: activeLocation !== null
     });
 
-    const { summary: aiSummary, alerts: aiAlerts } = useWeatherInsights(
-        weatherData || null,
-        activeLocation?.name || null
-    );
+    // Disable automatic AI insights - commented out to prevent auto-analysis
+    // const { summary: aiSummary, alerts: aiAlerts } = useWeatherInsights(
+    //     weatherData || null,
+    //     activeLocation?.name || null
+    // );
+
+    // Set manual values - AI analysis disabled
+    const aiSummary = null;
+    const aiAlerts: any[] = [];
 
     // Auto Dark/Light mode based on time
     useEffect(() => {
@@ -645,9 +649,6 @@ function ClimaSenseAppContent() {
                             >
                                 {/* Location Carousel */}
                                 <LocationCarousel onLocationSelect={handleLocationSelect} />
-
-                                {/* Smart Alerts */}
-                                <SmartAlerts weatherData={weatherData} />
 
                                 {/* Hero Section */}
                                 {weatherData && weatherData.hourly && weatherData.daily && (

@@ -82,60 +82,60 @@ export class OpenRouterError extends Error {
 // System Prompts
 // ============================================================
 
-const WEATHER_ANALYST_SYSTEM_PROMPT = `Anda adalah WeatherGPT, asisten cuaca cerdas berbasis AI yang tersedia di aplikasi ClimaSense.
+const WEATHER_ANALYST_SYSTEM_PROMPT = `You are WeatherGPT, a smart AI-powered weather assistant available in the ClimaSense application.
 
-Peran Anda:
-- Memberikan analisis cuaca yang akurat dan mudah dipahami
-- Menjelaskan fenomena cuaca kompleks dengan bahasa sederhana
-- Memberikan rekomendasi praktis berdasarkan kondisi cuaca
-- Menjawab pertanyaan pengguna tentang cuaca dengan percaya diri
-- Bercakap santai dan ramah tentang topik terkait cuaca
-- Memberikan edukasi tentang meteorologi, iklim, dan fenomena cuaca
-- Menyarankan aktivitas yang sesuai dengan kondisi cuaca saat ini
+Your Role:
+- Provide accurate and easy-to-understand weather analysis
+- Explain complex weather phenomena in simple language
+- Give practical recommendations based on current weather conditions
+- Answer user questions about weather with confidence
+- Have casual and friendly conversations about weather-related topics
+- Provide education about meteorology, climate, and weather phenomena
+- Suggest activities appropriate for current weather conditions
 
-Karakteristik Komunikasi:
-- Ramah, profesional, dan santai
-- Ringkas namun informatif (usahakan 1-3 paragraf)
-- Gunakan emoji secara bijak untuk meningkatkan keterbacaan
-- Fokus pada informasi yang relevan dan actionable
-- Siap berdiskusi mendalam tentang topik cuaca yang diminati pengguna
-- Jangan ragu untuk memberikan penjelasan detail jika ditanya
+Communication Characteristics:
+- Friendly, professional, and casual
+- Concise yet informative (aim for 1-3 paragraphs)
+- Use emojis wisely to improve readability
+- Focus on relevant and actionable information
+- Ready for deeper discussions about weather topics of interest
+- Don't hesitate to provide detailed explanations if asked
 
-Format Respons:
-- Mulai dengan jawaban langsung atas pertanyaan pengguna
-- Jelaskan konteks dan alasan di balik jawaban
-- Berikan rekomendasi atau tips jika relevan
-- Akhiri dengan pertanyaan follow-up untuk mendorong percakapan lebih lanjut jika sesuai
+Response Format:
+- Start with a direct answer to the user's question
+- Explain context and reasoning behind the answer
+- Provide recommendations or tips if relevant
+- End with a follow-up question to encourage further conversation if appropriate
 
-Topik yang Dapat Dibahas:
-- Analisis cuaca harian dan prakiraan
-- Fenomena cuaca ekstrem dan mitigasi
-- Perubahan iklim dan tren cuaca jangka panjang
-- Tips aktivitas outdoor berdasarkan cuaca
-- Teknologi meteorologi dan prediksi cuaca
-- Kesehatan dan cuaca (alergi, kesehatan mental, dst)
-- Persiapan untuk kondisi cuaca buruk
-- Dampak cuaca pada pertanian, transportasi, dan industri
+Topics You Can Discuss:
+- Daily weather analysis and forecasts
+- Extreme weather phenomena and mitigation
+- Long-term climate change and weather trends
+- Outdoor activity tips based on weather
+- Weather technology and prediction methods
+- Health and weather (allergies, mental health, etc.)
+- Preparation for poor weather conditions
+- Weather impacts on agriculture, transportation, and industry
 
-Gaya Percakapan:
-- Gunakan bahasa Indonesia yang natural dan mudah dipahami
-- Boleh menggunakan ungkapan casual dalam percakapan
-- Tunjukkan empati terhadap situasi cuaca pengguna
-- Berikan motivasi jika cuaca tidak mendukung aktivitas yang diinginkan
+Conversation Style:
+- Use clear and easy-to-understand English
+- Feel free to use casual language in conversations
+- Show empathy toward the user's weather situation
+- Provide motivation if weather doesn't support desired activities
 
-Batasan:
-- Jangan memberikan diagnosis atau saran medis serius
-- Jangan membuat prediksi cuaca jangka panjang (lebih dari 14 hari) yang tidak akurat
-- Tetap fokus pada topik cuaca dan yang terkait (jangan bahas topik yang tidak ada hubungannya)
-- Jika tidak yakin, katakan dengan jujur dan tawarkan untuk mencari informasi lebih lanjut
-- Tidak boleh memberikan informasi palsu tentang cuaca ekstrem yang tidak terjadi`
+Limitations:
+- Don't provide serious medical diagnosis or advice
+- Don't make inaccurate long-term forecasts (beyond 14 days)
+- Stay focused on weather-related topics
+- If unsure, admit it honestly and offer to find more information
+- Don't provide false information about non-occurring extreme weather`
 
 // ============================================================
 // API Functions
 // ============================================================
 
 /**
- * Send a message to OpenRouter API dan dapatkan respons AI
+ * Send a message to OpenRouter API and get AI response
  */
 async function callOpenRouterAPI(
     messages: MessageRole[],
@@ -251,7 +251,7 @@ async function callOpenRouterAPI(
 }
 
 /**
- * Get AI weather analysis untuk kondisi cuaca
+ * Get AI weather analysis for weather conditions
  */
 export async function getWeatherAnalysis(
     weatherContext: string,
@@ -259,8 +259,8 @@ export async function getWeatherAnalysis(
 ): Promise<AIResponse> {
     try {
         const userMessage = userQuestion
-            ? `Kondisi cuaca: ${weatherContext}\n\nPertanyaan: ${userQuestion}`
-            : `Berikan analisis cuaca untuk kondisi berikut: ${weatherContext}`
+            ? `Weather condition: ${weatherContext}\n\nQuestion: ${userQuestion}`
+            : `Please provide a weather analysis for the following condition: ${weatherContext}`
 
         const messages: MessageRole[] = [
             {
@@ -290,7 +290,7 @@ export async function getWeatherAnalysis(
 }
 
 /**
- * Get AI summary untuk data cuaca harian
+ * Get AI summary for daily weather data
  */
 export async function getDailySummary(
     location: string,
@@ -299,9 +299,9 @@ export async function getDailySummary(
 ): Promise<AIResponse> {
     try {
         const weatherContext = `
-Lokasi: ${location}
-Cuaca Saat Ini: ${currentWeather}
-Prakiraan: ${forecast}
+Location: ${location}
+Current Weather: ${currentWeather}
+Forecast: ${forecast}
         `.trim()
 
         const messages: MessageRole[] = [
@@ -311,7 +311,7 @@ Prakiraan: ${forecast}
             },
             {
                 role: 'user',
-                content: `Buatkan ringkasan cuaca harian yang singkat dan informatif untuk:\n${weatherContext}`,
+                content: `Create a concise and informative daily weather summary for:\n${weatherContext}`,
             },
         ]
 
@@ -332,7 +332,7 @@ Prakiraan: ${forecast}
 }
 
 /**
- * Conversation dengan AI assistant untuk cuaca
+ * Conversation with AI assistant for weather
  * Supports multi-turn conversation
  */
 export async function chat(
@@ -387,10 +387,10 @@ export async function generateWeatherRecommendations(
     userContext?: string
 ): Promise<AIResponse> {
     try {
-        let prompt = `Berdasarkan kondisi cuaca: ${weatherCondition}\n\nBerikan rekomendasi praktis untuk aktivitas sehari-hari.`
+        let prompt = `Based on the weather condition: ${weatherCondition}\n\nProvide practical recommendations for daily activities.`
 
         if (userContext) {
-            prompt += `\n\nKonteks tambahan: ${userContext}`
+            prompt += `\n\nAdditional context: ${userContext}`
         }
 
         const messages: MessageRole[] = [
@@ -442,7 +442,7 @@ export async function analyzeWeatherTrend(
             },
             {
                 role: 'user',
-                content: `Analisis tren cuaca berikut dan berikan insights:\n${predictionText}`,
+                content: `Analyze the following weather trends and provide insights:\n${predictionText}`,
             },
         ]
 
@@ -467,7 +467,7 @@ export async function analyzeWeatherTrend(
 // ============================================================
 
 function handleOpenRouterError(error: unknown): AIResponse {
-    let errorMessage = 'Terjadi kesalahan saat memproses permintaan AI'
+    let errorMessage = 'An error occurred while processing the AI request'
     let errorCode = 'UNKNOWN_ERROR'
 
     if (error instanceof OpenRouterError) {

@@ -1,6 +1,6 @@
 /**
  * Weather Alerts Service
- * Generate smart alerts dari data cuaca menggunakan AI (Groq)
+ * Generate smart alerts from weather data using AI (Groq)
  */
 
 import type { CombinedWeatherData } from '@/types/weather.types'
@@ -19,8 +19,8 @@ export interface WeatherAlert {
 }
 
 /**
- * Generate smart weather alerts dari data cuaca
- * Gunakan AI untuk analisis dan alert generation
+ * Generate smart weather alerts from weather data
+ * Use AI for analysis and alert generation
  */
 export async function generateWeatherAlerts(
     weatherData: CombinedWeatherData,
@@ -43,26 +43,26 @@ export async function generateWeatherAlerts(
             highHumidity: current.humidity > 80,
         }
 
-        // Build context untuk AI
+        // Build context for AI
         const weatherContext = `
-Lokasi: ${location}
-Suhu saat ini: ${current.temperature}°C
-Kondisi: ${getWeatherConditionText(current.weatherCode)}
-Kelembaban: ${current.humidity}%
-Kecepatan Angin: ${current.windSpeed} km/h
-Probabilitas Curah Hujan Hari Ini: ${today.precipitationSum}mm
-Indeks UV: ${today.uvIndexMax}
-Suhu Tertinggi: ${today.temperatureMax}°C
-Suhu Terendah: ${today.temperatureMin}°C
-Prakiraan Besok: ${getWeatherConditionText(tomorrow.weatherCode)} dengan suhu ${tomorrow.temperatureMin}°C - ${tomorrow.temperatureMax}°C
+Location: ${location}
+Current Temperature: ${current.temperature}°C
+Condition: ${getWeatherConditionText(current.weatherCode)}
+Humidity: ${current.humidity}%
+Wind Speed: ${current.windSpeed} km/h
+Rain Probability Today: ${today.precipitationSum}mm
+UV Index: ${today.uvIndexMax}
+High Temperature: ${today.temperatureMax}°C
+Low Temperature: ${today.temperatureMin}°C
+Tomorrow's Forecast: ${getWeatherConditionText(tomorrow.weatherCode)} with temperatures ${tomorrow.temperatureMin}°C - ${tomorrow.temperatureMax}°C
     `.trim()
 
         // Check rain probability
         if (checkResults.rainProbability) {
             const rainContext = `
-Curah hujan diperkirakan ${today.precipitationSum}mm hari ini.
-Kondisi: ${getWeatherConditionText(current.weatherCode)}
-${current.windSpeed > 20 ? 'Dengan kecepatan angin yang cukup kuat.' : ''}
+Rain is expected at ${today.precipitationSum}mm today.
+Condition: ${getWeatherConditionText(current.weatherCode)}
+${current.windSpeed > 20 ? 'With strong wind speed.' : ''}
       `.trim()
 
             const rainAlert = await generateAlertFromAI(
@@ -78,9 +78,9 @@ ${current.windSpeed > 20 ? 'Dengan kecepatan angin yang cukup kuat.' : ''}
         // Check UV index
         if (checkResults.highUV) {
             const uvContext = `
-Indeks UV siang hari akan mencapai ${today.uvIndexMax} (tinggi).
-Suhu akan mencapai ${today.temperatureMax}°C.
-Kondisi cuaca: ${getWeatherConditionText(current.weatherCode)}
+UV index during midday will reach ${today.uvIndexMax} (high).
+Temperature will reach ${today.temperatureMax}°C.
+Weather condition: ${getWeatherConditionText(current.weatherCode)}
       `.trim()
 
             const uvAlert = await generateAlertFromAI(
@@ -96,9 +96,9 @@ Kondisi cuaca: ${getWeatherConditionText(current.weatherCode)}
         // Check wind speed
         if (checkResults.highWindSpeed) {
             const windContext = `
-Kecepatan angin tinggi diperkirakan ${current.windSpeed} km/h.
-Curah hujan: ${today.precipitationSum}mm
-Kondisi: ${getWeatherConditionText(current.weatherCode)}
+Strong wind is expected at ${current.windSpeed} km/h.
+Rain: ${today.precipitationSum}mm
+Condition: ${getWeatherConditionText(current.weatherCode)}
       `.trim()
 
             const windAlert = await generateAlertFromAI(
@@ -114,9 +114,9 @@ Kondisi: ${getWeatherConditionText(current.weatherCode)}
         // Check extreme temperature
         if (checkResults.extremeTemp) {
             const tempContext = `
-Suhu ekstrem diperkirakan: ${current.temperature}°C
-Suhu tertinggi: ${today.temperatureMax}°C
-Kondisi: ${getWeatherConditionText(current.weatherCode)}
+Extreme temperature expected: ${current.temperature}°C
+High: ${today.temperatureMax}°C
+Condition: ${getWeatherConditionText(current.weatherCode)}
       `.trim()
 
             const tempAlert = await generateAlertFromAI(
@@ -132,9 +132,9 @@ Kondisi: ${getWeatherConditionText(current.weatherCode)}
         // Check high humidity
         if (checkResults.highHumidity) {
             const humidityContext = `
-Kelembaban udara tinggi mencapai ${current.humidity}%
-Suhu: ${current.temperature}°C
-Kondisi: ${getWeatherConditionText(current.weatherCode)}
+High humidity reaching ${current.humidity}%
+Temperature: ${current.temperature}°C
+Condition: ${getWeatherConditionText(current.weatherCode)}
       `.trim()
 
             const humidityAlert = await generateAlertFromAI(
@@ -156,7 +156,7 @@ Kondisi: ${getWeatherConditionText(current.weatherCode)}
 }
 
 /**
- * Generate single alert menggunakan AI
+ * Generate single alert using AI
  */
 async function generateAlertFromAI(
     alertType: string,
@@ -165,22 +165,22 @@ async function generateAlertFromAI(
 ): Promise<WeatherAlert | null> {
     try {
         const prompt = `
-Buatkan alert cuaca singkat dan informatif untuk situasi berikut:
+Create a concise and informative weather alert for the following situation:
 
-Jenis Alert: ${alertType}
-Detail Spesifik: ${specifics}
+Alert Type: ${alertType}
+Specific Details: ${specifics}
 
-Konteks Umum Cuaca:
+General Weather Context:
 ${generalContext}
 
-Format respons HARUS berupa JSON seperti ini (TANPA markdown):
+Response format MUST be JSON like this (WITHOUT markdown):
 {
-  "title": "Judul alert (max 30 karakter)",
-  "message": "Pesan detail (max 100 karakter)",
+  "title": "Alert title (max 30 characters)",
+  "message": "Detail message (max 100 characters)",
   "severity": "low|moderate|high"
 }
 
-PENTING: Hanya berikan JSON, tanpa penjelasan tambahan.
+IMPORTANT: Only provide JSON, without any additional explanation.
     `.trim()
 
         const historyRef: ConversationHistory = [
@@ -197,7 +197,7 @@ PENTING: Hanya berikan JSON, tanpa penjelasan tambahan.
             return null
         }
 
-        // Parse JSON dari response
+        // Parse JSON from response
         const jsonMatch = result.content.match(/\{[\s\S]*\}/)
         if (!jsonMatch) {
             return null
@@ -222,7 +222,7 @@ PENTING: Hanya berikan JSON, tanpa penjelasan tambahan.
 }
 
 /**
- * Generate basic alerts jika AI tidak tersedia
+ * Generate basic alerts if AI is not available
  */
 function generateBasicAlerts(weatherData: CombinedWeatherData, location: string): WeatherAlert[] {
     const alerts: WeatherAlert[] = []
@@ -289,7 +289,7 @@ function getWeatherConditionText(weatherCode: number): string {
 }
 
 /**
- * Generate daily AI summary dari weather data
+ * Generate daily AI summary from weather data
  */
 export async function generateDailyAISummary(
     weatherData: CombinedWeatherData,
@@ -300,27 +300,27 @@ export async function generateDailyAISummary(
         const today = weatherData.daily[0]
 
         const weatherContext = `
-Lokasi: ${location}
-Suhu saat ini: ${current.temperature}°C
-Kondisi: ${getWeatherConditionText(current.weatherCode)}
-Kelembaban: ${current.humidity}%
-Kecepatan Angin: ${current.windSpeed} km/h
-Probabilitas Curah Hujan: ${today.precipitationSum}mm
-Suhu Tertinggi: ${today.temperatureMax}°C
-Suhu Terendah: ${today.temperatureMin}°C
-Tekanan: ${current.pressure} hPa
+Location: ${location}
+Current Temperature: ${current.temperature}°C
+Condition: ${getWeatherConditionText(current.weatherCode)}
+Humidity: ${current.humidity}%
+Wind Speed: ${current.windSpeed} km/h
+Rain Probability: ${today.precipitationSum}mm
+High Temperature: ${today.temperatureMax}°C
+Low Temperature: ${today.temperatureMin}°C
+Pressure: ${current.pressure} hPa
     `.trim()
 
         const prompt = `
-Buatkan ringkasan cuaca singkat dan informatif untuk ${location}:
+Create a concise and informative weather summary for ${location}:
 
 ${weatherContext}
 
-Ringkasan harus:
-- Singkat (1-2 kalimat)
-- Menggambarkan kondisi saat ini dan prakiraan hari ini
-- Informatif dan mudah dipahami
-- Dalam bahasa Indonesia
+Summary must:
+- Be brief (1-2 sentences)
+- Describe current conditions and today's forecast
+- Be informative and easy to understand
+- Be in English language only
     `.trim()
 
         const result = await chat(prompt)

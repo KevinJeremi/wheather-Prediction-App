@@ -106,7 +106,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatApiRe
                     success: false,
                     error: {
                         code: 'INVALID_JSON',
-                        message: 'Request body harus valid JSON',
+                        message: 'Request body must be valid JSON',
                     },
                 },
                 { status: 400 }
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatApiRe
                     success: false,
                     error: {
                         code: 'VALIDATION_ERROR',
-                        message: 'Message harus string dan tidak kosong (max 2000 characters)',
+                        message: 'Message must be a string and not empty (max 2000 characters)',
                     },
                 },
                 { status: 400 }
@@ -163,7 +163,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatApiRe
 }
 
 // ============================================================
-// OPTIONS Handler (untuk CORS)
+// OPTIONS Handler (for CORS)
 // ============================================================
 
 export async function OPTIONS(request: NextRequest) {

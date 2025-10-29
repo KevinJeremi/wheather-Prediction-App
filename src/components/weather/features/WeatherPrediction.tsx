@@ -157,7 +157,7 @@ export function WeatherPrediction({ currentWeatherData }: WeatherPredictionProps
             <motion.div variants={itemVariants} className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-semibold text-gray-900 dark:text-white mb-2">Weather Forecast</h1>
-                    <p className="text-gray-600 dark:text-gray-400">Advanced predictions from JMA Global Forecast System</p>
+                    <p className="text-gray-600 dark:text-gray-400">Advanced weather predictions for your location</p>
                 </div>
                 <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-xl">
                     <TrendingUp size={18} />

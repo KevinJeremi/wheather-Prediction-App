@@ -1,12 +1,12 @@
 /**
  * Request Deduplication & Debouncing Manager
- * Mencegah duplicate requests dan membatasi request frequency
+ * Prevent duplicate requests and limit request frequency
  * 
- * Manfaat:
- * - Prevent duplicate requests yang terkirim simultan
+ * Benefits:
+ * - Prevent duplicate requests sent simultaneously
  * - Debounce rapid user input (typing)
- * - Queue requests untuk rate limiting
- * - Reduce token usage drastis
+ * - Queue requests for rate limiting
+ * - Dramatically reduce token usage
  */
 
 interface PendingRequest {
@@ -25,8 +25,8 @@ export class RequestDeduplicator {
     private pendingRequests = new Map<string, PendingRequest>()
     private requestCache = new Map<string, { result: any; timestamp: number }>()
     private debounceTimers = new Map<string, NodeJS.Timeout>()
-    private readonly DEFAULT_DEBOUNCE = 800 // 800ms untuk user input
-    private readonly DEFAULT_DEDUPLICATE = 2000 // 2 second window untuk deduplication
+    private readonly DEFAULT_DEBOUNCE = 800 // 800ms for user input
+    private readonly DEFAULT_DEDUPLICATE = 2000 // 2 second window for deduplication
     private config: RequestConfig
 
     constructor(config: Partial<RequestConfig> = {}) {
@@ -37,8 +37,8 @@ export class RequestDeduplicator {
     }
 
     /**
-     * Execute request dengan deduplication
-     * Jika request yang sama sudah pending, tunggu hasilnya
+     * Execute request with deduplication
+     * If the same request is already pending, wait for its result
      */
     async executeWithDedup<T>(
         key: string,
@@ -152,7 +152,7 @@ export class RequestDeduplicator {
 export const requestDeduplicator = new RequestDeduplicator()
 
 // ============================================================
-// Request Queue untuk Rate Limiting
+// Request Queue for Rate Limiting
 // ============================================================
 
 export class RequestQueue {
@@ -162,7 +162,7 @@ export class RequestQueue {
     private readonly DELAY_BETWEEN_REQUESTS = 100 // 100ms between requests
 
     /**
-     * Add request ke queue
+     * Add request to queue
      */
     async enqueue<T>(executor: () => Promise<T>): Promise<T> {
         return new Promise((resolve, reject) => {

@@ -11,7 +11,6 @@ import { Header } from '@/components/layout/Header';
 import { TodaySummary } from '@/components/weather/features/TodaySummary';
 import { EnvironmentalInsights } from '@/components/weather/features/EnvironmentalInsights';
 import { LocationCarousel } from '@/components/weather/features/LocationCarousel';
-import { SmartAlerts } from '@/components/weather/features/SmartAlerts';
 import Aurora from '@/components/weather/Aurora';
 import { LoadingCloud } from '@/components/weather/animations/LoadingCloud';
 import { GlobeHint } from '@/components/weather/animations/GlobeHint';
@@ -27,8 +26,8 @@ import type { LocationCoordinates } from '@/types/weather.types';
 import { useWeatherInsights } from '@/hooks/useWeatherInsights';
 
 /**
- * Inner component yang menggunakan WeatherContext
- * Dipisah dari outer component yang menyediakan provider
+ * Inner component that uses WeatherContext
+ * Separated from outer component that provides the provider
  */
 function ClimaSenseAppContent() {
   const [activeView, setActiveView] = useState<'home' | 'history' | 'weather-history' | 'weather-prediction' | 'alerts' | 'settings'>('home');
@@ -94,7 +93,7 @@ function ClimaSenseAppContent() {
   // Search for location by name
   const searchLocationByName = async (locationName: string) => {
     if (!locationName.trim()) {
-      alert('Silakan masukkan nama kota');
+      alert('Please enter a city name');
       return;
     }
 
@@ -147,7 +146,7 @@ function ClimaSenseAppContent() {
         setShowLocationOptions(false);
         setManualLocationInput('');
       } else {
-        alert('Lokasi tidak ditemukan. Coba dengan nama kota yang berbeda.');
+        alert('Location not found. Try with a different city name.');
       }
     } catch (error) {
       console.error('Error searching location:', error);
@@ -752,8 +751,8 @@ function ClimaSenseAppContent() {
                 {/* Location Carousel */}
                 <LocationCarousel onLocationSelect={handleLocationSelect} />
 
-                {/* Smart Alerts */}
-                <SmartAlerts weatherData={weatherData} />
+                {/* Smart Alerts - DISABLED for auto-analysis */}
+                {/* <SmartAlerts weatherData={weatherData} /> */}
 
                 {/* Hero Section */}
                 {weatherData && (
@@ -828,18 +827,6 @@ function ClimaSenseAppContent() {
                       cloudCover={weatherData.hourly[0].cloudCover}
                       uvIndex={weatherData.daily[0].uvIndexMax}
                       visibility={weatherData.visibility?.valueKm}
-                      forecast={weatherData.daily.slice(0, 7).map((day) => ({
-                        date: new Date(day.date).toLocaleDateString('id-ID', {
-                          weekday: 'short',
-                          month: 'short',
-                          day: 'numeric'
-                        }),
-                        temp: Math.round((day.temperatureMax + day.temperatureMin) / 2),
-                        minTemp: Math.round(day.temperatureMin),
-                        maxTemp: Math.round(day.temperatureMax),
-                        condition: getWeatherConditionText(day.weatherCode),
-                        precipitation: day.precipitationSum
-                      }))}
                     />
                   )}
                 </div>
