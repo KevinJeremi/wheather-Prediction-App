@@ -47,6 +47,7 @@ export function AIReasoning({
   const [isInitialized, setIsInitialized] = useState(false);
   const [lastAIResponse, setLastAIResponse] = useState(''); // For detecting Kiro mood
   const [tokenWarning, setTokenWarning] = useState<string | null>(null);
+  const [shouldScroll, setShouldScroll] = useState(false); // Control when to scroll
 
   const { isLoading, error, response, chatWithLocation, userLocation, isLocationReady, clearError } = useAIWithLocation();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -91,14 +92,18 @@ What would you like to know? 😊`;
     }
   }, [isInitialized, isLocationReady, userLocation, location, temperature, condition, pressure]);
 
-  // Auto scroll to latest message
+  // Auto scroll to latest message - ONLY when user sends/receives messages, NOT on initial load
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Only scroll when explicitly requested (not on initial load)
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, isLoading]);
+    if (shouldScroll) {
+      scrollToBottom();
+      setShouldScroll(false); // Reset flag
+    }
+  }, [shouldScroll]);
 
   // Update messages when response comes from OpenRouter
   useEffect(() => {
@@ -110,6 +115,7 @@ What would you like to know? 😊`;
       };
       setMessages(prev => [...prev, aiMessage]);
       setLastAIResponse(response); // Update for mood detection
+      setShouldScroll(true); // Enable scroll for new messages
     }
   }, [response, isLoading]);
 
@@ -134,6 +140,7 @@ What would you like to know? 😊`;
       };
       setMessages(prev => [...prev, userMessage, aiMessage]);
       setLastAIResponse(quickReply);
+      setShouldScroll(true); // Enable scroll for new messages
       setMessage('');
       return;
     }
@@ -148,6 +155,7 @@ What would you like to know? 😊`;
       timestamp: new Date().toISOString()
     };
     setMessages(prev => [...prev, userMessage]);
+    setShouldScroll(true); // Enable scroll for user message
     setMessage('');
 
     // Build weather context from props

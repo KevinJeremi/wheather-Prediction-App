@@ -3,6 +3,7 @@
 import { MapPin, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 interface HeroSectionProps {
   temp: number;
@@ -40,7 +41,7 @@ export function HeroSection({ temp, location, localTime, condition, aiSummary }:
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}
-      className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#2F80ED] via-[#3D8FED] to-[#56CCF2] p-6 md:p-8 text-white shadow-[0_8px_32px_rgba(47,128,237,0.3)]"
+      className="relative overflow-visible rounded-3xl bg-gradient-to-br from-[#2F80ED] via-[#3D8FED] to-[#56CCF2] p-6 md:p-8 text-white shadow-[0_8px_32px_rgba(47,128,237,0.3)]"
     >
       {/* Decorative elements with parallax */}
       <motion.div
@@ -58,68 +59,123 @@ export function HeroSection({ temp, location, localTime, condition, aiSummary }:
       />
 
       <div className="relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
-          {/* Left: Temperature */}
-          <div>
-            {/* Location and Time */}
-            <div className="flex flex-col gap-2 mb-4">
-              <motion.div
-                className="flex items-center gap-2"
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.2 }}
-              >
-                <MapPin className="w-4 h-4" />
-                <span className="opacity-90">{location}</span>
-              </motion.div>
-
-              <motion.div
-                className="flex items-center gap-2"
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.3 }}
-              >
-                <Clock className="w-4 h-4" />
-                <span className="opacity-75 text-sm">{localTime}</span>
-              </motion.div>
-            </div>
-
-            {/* Temperature - Compact */}
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.4 }}
-            >
-              <div className="flex items-start">
-                <motion.span
-                  className="text-[80px] md:text-[96px] leading-none"
-                  key={displayTemp}
-                >
-                  {displayTemp}
-                </motion.span>
-                <div className="flex flex-col ml-2 mt-2">
-                  <span className="text-4xl md:text-5xl">°C</span>
-                  <span className="text-sm opacity-80 mt-1">{condition}</span>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Right: AI Summary Card */}
+        <div className="flex flex-col lg:flex-row gap-4 md:gap-6">
+          {/* Left: Kiro Mascot - Full Height */}
           <motion.div
-            initial={{ x: 20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className=" bg-white/10 backdrop-blur-md rounded-2xl p-4 md:p-5 border border-white/20"
+            initial={{ scale: 0, rotate: -10, opacity: 0 }}
+            animate={{ scale: 1, rotate: 0, opacity: 1 }}
+            transition={{ delay: 0.2, type: 'spring', stiffness: 100 }}
+            whileHover={{ scale: 1.05, rotate: 5 }}
+            className="hidden lg:flex flex-col justify-end items-center"
+            style={{ minHeight: '100%' }}
           >
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              <span className="text-sm font-medium opacity-90">AI Weather Assistant</span>
+            <div className="relative -mb-6">
+              {/* Glow effect behind mascot */}
+              <motion.div
+                className="absolute inset-0 rounded-full bg-gradient-to-br from-yellow-300 to-orange-300 blur-3xl opacity-30"
+                animate={{
+                  scale: [1, 1.2, 1],
+                  opacity: [0.2, 0.4, 0.2],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              />
+
+              {/* Kiro Image - Larger and pepet ke bawah */}
+              <Image
+                src="/maskot/idle_smile.png"
+                alt="Kiro Weather Assistant"
+                width={200}
+                height={250}
+                className="relative z-10 drop-shadow-2xl object-contain"
+                priority
+              />
+
+              {/* Floating animation */}
+              <motion.div
+                className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-24 h-3 bg-black/10 rounded-full blur-md"
+                animate={{
+                  scaleX: [1, 1.2, 1],
+                  opacity: [0.2, 0.4, 0.2],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              />
             </div>
-            <p className="text-sm leading-relaxed opacity-95">
-              {aiSummary}
-            </p>
           </motion.div>
+
+          {/* Center-Right: Temperature and Summary */}
+          <div className="flex-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Temperature Section */}
+              <div>
+                {/* Location and Time */}
+                <div className="flex flex-col gap-2 mb-4">
+                  <motion.div
+                    className="flex items-center gap-2"
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    <MapPin className="w-4 h-4" />
+                    <span className="opacity-90">{location}</span>
+                  </motion.div>
+
+                  <motion.div
+                    className="flex items-center gap-2"
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    <Clock className="w-4 h-4" />
+                    <span className="opacity-75 text-sm">{localTime}</span>
+                  </motion.div>
+                </div>
+
+                {/* Temperature - Compact */}
+                <motion.div
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  <div className="flex items-start">
+                    <motion.span
+                      className="text-6xl md:text-7xl leading-none font-bold"
+                      key={displayTemp}
+                    >
+                      {displayTemp}
+                    </motion.span>
+                    <div className="flex flex-col ml-2 mt-2">
+                      <span className="text-3xl md:text-4xl">°C</span>
+                      <span className="text-sm opacity-80 mt-1">{condition}</span>
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+
+              {/* AI Summary Card */}
+              <motion.div
+                initial={{ x: 20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.5 }}
+                className="bg-white/10 backdrop-blur-md rounded-2xl p-4 md:p-5 border border-white/20"
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span className="text-sm font-medium opacity-90">AI Weather Assistant</span>
+                </div>
+                <p className="text-sm leading-relaxed opacity-95">
+                  {aiSummary}
+                </p>
+              </motion.div>
+            </div>
+          </div>
         </div>
       </div>
     </motion.div>

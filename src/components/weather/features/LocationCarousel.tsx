@@ -307,6 +307,7 @@ export function LocationCarousel({ onLocationSelect }: LocationCarouselProps) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide"
+        style={{ scrollBehavior: 'smooth' }}
       >
         <motion.button
           whileTap={{ scale: 0.9 }}
@@ -316,7 +317,7 @@ export function LocationCarousel({ onLocationSelect }: LocationCarouselProps) {
           <ChevronLeft className="w-4 h-4 text-gray-600 dark:text-gray-400" />
         </motion.button>
 
-        <div className="flex gap-3 overflow-x-auto scrollbar-hide">
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide" style={{ scrollBehavior: 'smooth' }}>
           {locations.map((location, index) => (
             <motion.div
               key={`${location.name}-${index}`}

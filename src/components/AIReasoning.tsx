@@ -47,6 +47,7 @@ export function AIReasoning({
     const [messages, setMessages] = useState<Array<{ role: 'assistant' | 'user', content: string, timestamp?: string }>>([]);
     const [isInitialized, setIsInitialized] = useState(false);
     const [tokenWarning, setTokenWarning] = useState<string | null>(null);
+    const [shouldScroll, setShouldScroll] = useState(false); // Control when to scroll
 
     const { isLoading, error, response, chatWithLocation, userLocation, isLocationReady, clearError } = useAIWithLocation();
     const kiroExpression = useKiroTyping(); // Hook to manage expression with typing
@@ -91,14 +92,18 @@ What would you like to know? 😊`;
         }
     }, [isInitialized, isLocationReady, userLocation, location, temperature, condition, pressure]);
 
-    // Auto scroll to latest message
+    // Auto scroll to latest message - ONLY when user sends/receives messages, NOT on initial load
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
+    // Only scroll when explicitly requested (not on initial load)
     useEffect(() => {
-        scrollToBottom();
-    }, [messages, isLoading]);
+        if (shouldScroll) {
+            scrollToBottom();
+            setShouldScroll(false); // Reset flag
+        }
+    }, [shouldScroll]);
 
     // Update messages when response comes from OpenRouter
     // Use vision analysis for more accurate expression
@@ -110,6 +115,7 @@ What would you like to know? 😊`;
                 timestamp: new Date().toISOString()
             };
             setMessages(prev => [...prev, aiMessage]);
+            setShouldScroll(true); // Enable scroll for new messages
 
             // Use vision-based expression analysis for better accuracy
             // LLM will see the expression image and choose the appropriate one
@@ -145,6 +151,7 @@ What would you like to know? 😊`;
                 timestamp: new Date().toISOString()
             };
             setMessages(prev => [...prev, userMessage, aiMessage]);
+            setShouldScroll(true); // Enable scroll for new messages
 
             // Use vision analysis untuk quick reply juga
             kiroExpression.updateFromContentWithVision(quickReply)
@@ -166,6 +173,7 @@ What would you like to know? 😊`;
             timestamp: new Date().toISOString()
         };
         setMessages(prev => [...prev, userMessage]);
+        setShouldScroll(true); // Enable scroll for user message
         setMessage('');
 
         // Build weather context dari props

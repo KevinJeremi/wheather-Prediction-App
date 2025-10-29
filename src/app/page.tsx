@@ -196,6 +196,26 @@ function ClimaSenseAppContent() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Prevent auto-scroll on page load
+  useEffect(() => {
+    // Disable smooth scrolling on initial load
+    document.documentElement.style.scrollBehavior = 'auto';
+
+    // Scroll to top on component mount
+    window.scrollTo(0, 0);
+
+    // Prevent any focusing that might cause scroll
+    document.body.style.overflow = 'hidden';
+
+    // Re-enable everything after initial load
+    const timer = setTimeout(() => {
+      document.documentElement.style.scrollBehavior = 'smooth';
+      document.body.style.overflow = '';
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   // Apply dark mode class to document
   useEffect(() => {
     if (isDark) {
