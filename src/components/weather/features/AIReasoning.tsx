@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Bot, User, Loader2, AlertCircle, MapPin, Cloud, Droplets } from 'lucide-react';
+import { Send, Bot, User, Loader2, AlertCircle, MapPin, Cloud, Droplets, RotateCcw } from 'lucide-react';
 import { useAIWithLocation } from '@/hooks/useAIWithLocation';
 import { injectLocationToRequest } from '@/services/groqServiceExtension';
 import { KiroMascot } from '@/components/KiroMascot';
@@ -193,6 +193,18 @@ What would you like to know? 😊`;
     }
   };
 
+  const handleResetChat = () => {
+    // Clear all messages
+    setMessages([]);
+    // Clear any errors and warnings
+    clearError();
+    setTokenWarning(null);
+    // Reset initialization to trigger welcome message again
+    setIsInitialized(false);
+    // Clear input
+    setMessage('');
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -224,10 +236,16 @@ What would you like to know? 😊`;
           </div>
         </div>
 
-        {/* Token Usage Indicator (optional) */}
-        <div className="text-xs text-gray-400 dark:text-gray-500">
+        {/* Reset Chat Button */}
+        <button
+          onClick={handleResetChat}
+          disabled={isLoading}
+          className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500 hover:text-[#2F80ED] dark:hover:text-[#56CCF2] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          title="Clear chat history and start fresh"
+        >
+          <RotateCcw className="w-3.5 h-3.5" />
           Reset chat
-        </div>
+        </button>
       </div>
 
       {/* Error Alert */}
