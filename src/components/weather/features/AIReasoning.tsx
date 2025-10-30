@@ -226,7 +226,7 @@ What would you like to know? 😊`;
 
         {/* Token Usage Indicator (optional) */}
         <div className="text-xs text-gray-400 dark:text-gray-500">
-          💚 Token Saved
+          Reset chat
         </div>
       </div>
 
